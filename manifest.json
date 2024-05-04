@@ -1,0 +1,72 @@
+{
+  "manifest_version": 3,
+  "name": "ChromeCopy",
+  "description": "",
+  "version": "0.0.1",
+  "icons": {
+    "128": "icon.png"
+  },
+  "action": {
+    // "default_popup": "./dist/main.html",
+    "default_icon": "icon.png",
+    "default_title": "ChromeCopy"
+  },
+  "content_scripts": [
+    {
+      "js": [
+        // "./node_modules/jquery/dist/jquery.min.js"
+        // "scripts/content.js"
+        // "./dist/main.js"
+        "./dist/contentScript.js"
+      ],
+      // "css": [
+      //   "./scripts/hltNt_ObjColor__Cev.css"
+      // ],
+      "matches": [
+        // "https://developer.chrome.com/docs/extensions/*",
+        // "https://developer.chrome.com/docs/webstore/*",
+        "http://*/*",
+        "https://*/*",
+        "file:///*/*"
+        // "*://*/*"
+      ]
+    }
+  ],
+  "background": {
+    "service_worker": "./dist/background.js",
+    "type": "module"
+    // "service_worker": ["./node_modules/jquery/dist/jquery.min.js", "./scripts/background.js"]
+  },
+  "permissions": [
+    "activeTab",
+    "scripting"
+    // "storage"
+  ],
+  // "host_permissions": [
+  //   "<all_urls>"
+  // ],
+  "commands": {
+    "copyHtml": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Q"
+      },
+      "description": "copyHtml"
+    },
+    "copyMarkdown": {
+      "suggested_key": {
+        "default": "Alt+Shift+M"
+      },
+      "description": "copyMarkdown"
+    },
+    "copyPlainText": {
+      "suggested_key": {
+        "default": "Alt+Shift+P"
+      },
+      "description": "copyPlainText"
+    }
+  }
+  // "options_page": "./src/options.html"
+  // "content_security_policy": {
+  //   "extension_pages": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+  // }
+}

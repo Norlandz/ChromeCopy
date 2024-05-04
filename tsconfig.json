@@ -1,0 +1,62 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2022",
+    ],
+    "target": "ES2020",
+    "module": "ESNext",
+    // "module": "CommonJS",
+    "useDefineForClassFields": true,
+    "skipLibCheck": true,
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    // "noEmit": true, // this prevents the dist folder ...
+    // "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    /* Linting */
+    "strict": true,
+    "noImplicitAny": true,
+    "noFallthroughCasesInSwitch": true,
+    // "noUnusedLocals": true,
+    // "noUnusedParameters": true,
+    //
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    //
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    //
+    "sourceMap": true,
+    // "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    //
+    // "rootDir": ".",
+    "outDir": "dist",
+    //
+    "allowJs": true,
+    //
+    "noErrorTruncation": true, // https://stackoverflow.com/questions/53113031/how-to-see-a-fully-expanded-typescript-type-without-n-more-and
+    //
+    "types": [
+      "chrome-types"
+    ]
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "Globals.d.ts",
+    "vite.config.ts",
+    "jest.config.js",
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules/**/*",
+    "**/.git/**/*",
+  ],
+}
+

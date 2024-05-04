@@ -1,0 +1,2 @@
+(()=>{"use strict";chrome.commands.onCommand.addListener(((o,e)=>{if(console.debug(o),"copyHtml"===o);else if("copyMarkdown"===o);else if("copyPlainText"!==o)return void console.error(`Command ${o} not found`);chrome.tabs.query({active:!0,currentWindow:!0},(async e=>{const n=e[0].id??(()=>{throw new Error})();await chrome.tabs.sendMessage(n,{command:o})}))}))})();
+//# sourceMappingURL=background.js.map
