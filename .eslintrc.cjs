@@ -94,27 +94,6 @@ module.exports = {
 //     //   // 'react-refresh',
 //     // ],
 //     rules: {
-//       // 'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-//       // 'react-hooks/exhaustive-deps': 'warn',
-// 
-//       // Note: you must disable the base rule as it can report incorrect errors
-//       'no-unused-vars': 'off',
-//       '@typescript-eslint/no-unused-vars': 'warn',
-//       // Note: you must disable the base rule as it can report incorrect errors
-//       'no-unused-expressions': 'off',
-//       '@typescript-eslint/no-unused-expressions': 'error',
-//       '@typescript-eslint/no-explicit-any': 'warn',
-//       '@typescript-eslint/no-unsafe-assignment': 'warn', // error -> then force type cast -- actually no much safer ...
-//       '@typescript-eslint/no-unsafe-argument': 'error',
-//       'prefer-const': 'warn',
-//       '@typescript-eslint/no-var-requires': 'warn',
-//       'no-empty': 'warn', // dk ... so many , before didnt install ext / the npm .. dk
-//       '@typescript-eslint/ban-ts-comment': 'warn',
-//       '@typescript-eslint/no-floating-promises': 'error',
-//       '@typescript-eslint/await-thenable': 'error',
-//       'no-inner-declarations': 'off',
-//       'no-constant-condition': 'warn',
-//       'no-useless-escape': 'warn',
 //     },
 //   }
 //   // https://typescript-eslint.io/getting-started/typed-linting#how-can-i-disable-type-aware-linting-for-a-subset-of-files
