@@ -1,4 +1,6 @@
 {
+  // Manifest file format  |  Chrome for Developers
+  // https://developer.chrome.com/docs/extensions/reference/manifest
   "manifest_version": 3,
   "name": "ChromeCopy",
   "description": "",
@@ -7,9 +9,9 @@
     "128": "icon.png"
   },
   "action": {
+    "default_title": "ChromeCopy",
+    "default_icon": "icon.png"
     // "default_popup": "./dist/main.html",
-    "default_icon": "icon.png",
-    "default_title": "ChromeCopy"
   },
   "content_scripts": [
     {
@@ -23,12 +25,12 @@
       //   "./scripts/hltNt_ObjColor__Cev.css"
       // ],
       "matches": [
-        // "https://developer.chrome.com/docs/extensions/*",
-        // "https://developer.chrome.com/docs/webstore/*",
         "http://*/*",
         "https://*/*",
         "file:///*/*"
         // "*://*/*"
+        // "https://developer.chrome.com/docs/extensions/*",
+        // "https://developer.chrome.com/docs/webstore/*",
       ]
     }
   ],
@@ -37,14 +39,6 @@
     "type": "module"
     // "service_worker": ["./node_modules/jquery/dist/jquery.min.js", "./scripts/background.js"]
   },
-  "permissions": [
-    "activeTab",
-    "scripting"
-    // "storage"
-  ],
-  // "host_permissions": [
-  //   "<all_urls>"
-  // ],
   "commands": {
     "copyHtml": {
       "suggested_key": {
@@ -64,8 +58,35 @@
       },
       "description": "copyPlainText"
     }
-  }
+  },
+  // "action"
   // "options_page": "./src/options.html"
+  "permissions": [
+    // Interact with the clipboard - Mozilla | MDN
+    // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Interact_with_the_clipboard#using_the_clipboard_api
+    // manifest.json - Mozilla | MDN
+    // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json
+    // chrome.permissions  |  API  |  Chrome for Developers
+    // https://developer.chrome.com/docs/extensions/reference/api/permissions
+    // Permissions  |  Chrome for Developers
+    // https://developer.chrome.com/docs/extensions/reference/permissions-list
+    // >"
+    // Use the [`"host_permissions"`](/docs/extensions/develop/concepts/declare-permissions) key or the [`"activeTab"`](/docs/extensions/develop/concepts/activeTab) permission, which grants temporary host permissions.
+    // <>
+    // https://developer.chrome.com/docs/extensions/reference/api/scripting
+    "activeTab",
+    "scripting",
+    "clipboardRead",
+    "clipboardWrite",
+    "contextMenus"
+    // "tabs"
+    // "offscreen",
+    // "storage"
+  ]
+  // "optional_permissions"
+  // "host_permissions": [
+  //   "<all_urls>"
+  // ],
   // "content_security_policy": {
   //   "extension_pages": "script-src 'self' 'unsafe-eval'; object-src 'self'"
   // }
