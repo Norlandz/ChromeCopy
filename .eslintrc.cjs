@@ -3,7 +3,7 @@ module.exports = {
   root: true,
   env: { browser: true, es2020: true },
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'], // 'plugin:react-hooks/recommended'], // , 'next/core-web-vitals', 'plugin:@next/next/recommended' , 'react-app', 'react-app/jest'
-  ignorePatterns: ['dist', '.eslintrc.cjs', '**/node_modules/**/*', 'webpack.config.cjs'], // '/coverage', 'config/jest/*.cjs'], // 'vite.config.ts', 'next.config.js', 'jest.config.ts', 'jest.setup.ts', 'Globals.d.ts'
+  ignorePatterns: ['dist', '.eslintrc.cjs', '**/node_modules/**/*', 'readme.html', 'webpack.config.cjs'], // '/coverage', 'config/jest/*.cjs'], // 'vite.config.ts', 'next.config.js', 'jest.config.ts', 'jest.setup.ts', 'Globals.d.ts'
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: ['./tsconfig.json'], // 'H:/Using/TLightChat/tlightchat-main/tsconfig.json',

@@ -2,7 +2,7 @@
         <html>
         <head>
             <meta charset="UTF-8">
-            <title></title>
+            <title>how to use</title>
             <style>
 /* From extension vscode.github */
 /*---------------------------------------------------------------------------------------------
@@ -132,7 +132,41 @@
 </style>
         </head>
         <body class="vscode-body vscode-light">
-            
+            <h3 id="how-to-use">how to use</h3>
+<table>
+<thead>
+<tr>
+<th>hotkey</th>
+<th>command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>^+q</td>
+<td>copyHtml</td>
+</tr>
+<tr>
+<td>!+m</td>
+<td>copyMarkdown</td>
+</tr>
+<tr>
+<td>!+p</td>
+<td>copyPlainText</td>
+</tr>
+</tbody>
+</table>
+<h3 id="how-to-install">how to install</h3>
+<ol>
+<li>download the source code &amp; extract to a folder <code>ChromeCopy/</code></li>
+<li>run <code>pnpm install</code> &amp; <code>pnpm run build:webpack</code> in <code>ChromeCopy/</code>-&gt; output (/generate) a <code>ChromeCopy/dist/</code> folder
+<ul>
+<li>(you can skip this step, if <code>ChromeCopy/dist/</code> folder is already provided (/generated) in the source code folder)</li>
+</ul>
+</li>
+<li>open Chrome browser &gt; <code>chrome://extensions/</code> &gt; <code>load unpacked</code> &gt; select <code>ChromeCopy/</code></li>
+<li>press hotkey to copy text in webpage in desired format</li>
+</ol>
+
             
             
         </body>
