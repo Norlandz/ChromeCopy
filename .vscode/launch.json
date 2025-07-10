@@ -1,0 +1,85 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run ts file one click with tsx (global)",
+      "runtimeExecutable": "tsx",
+      "runtimeArgs": [
+        "--watch"
+      ],
+      "program": "${file}",
+      "args": [],
+      "outputCapture": "std", // for winston logger
+      "skipFiles": [
+        "<node_internals>/**",
+        "**/node_modules/**",
+      ],
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Debug Vite",
+      "url": "http://localhost:5173",
+      // "url": "http://localhost:5174",
+      // "name": "Debug Nextjs client",
+      // "url": "http://localhost:3000",
+      // https://stackoverflow.com/questions/66147328/is-there-a-way-to-debug-code-in-vscode-initiated-with-vite
+      // must have the vite server already running, then attach 
+      // "webRoot": "H:/Using/tldraw-contribute/tldraw/apps/examples/src"
+      // "webRoot": "H:/Using/TLightChat/tlightchat-main"
+      "webRoot": "${workspaceFolder}",
+      // https://stackoverflow.com/questions/47556495/how-do-i-skip-external-code-when-debugging-in-vs-code
+      "skipFiles": [
+        "<node_internals>/**",
+        "**/node_modules/**",
+        "${workspaceFolder}/node_modules/**/*.js",
+        "**/proxy.js",
+        "**/prepareinjection.js",
+        "**/installhook.js",
+        "main.jsx",
+        "@react-refresh",
+      ],
+    },
+    // []
+    // --inspect-brk=5858
+    // <>
+    // https://stackoverflow.com/questions/34835082/how-to-debug-using-npm-run-scripts-from-vscode
+    {
+      // |>"
+      //       "name": "Next.js: debug server-side",
+      // <|
+      // https://nextjs.org/docs/app/building-your-application/configuring/debugging
+      "type": "node-terminal",
+      "name": "Next.js: debug server-side",
+      "request": "launch",
+      "command": "pnpm run dev",
+      "skipFiles": [
+        "<node_internals>/**",
+        "**/node_modules/**"
+      ],
+    },
+    // $>"
+    // I had the same issue with unbound breakpoints only with API files. Solved by the following:
+    // <$
+    //    "dev": "next dev --turbopack",   # remove this --turbopack
+    // <$
+    //    You just need to run your project with the unbound breakpoints and see if they are hit correctly. Maybe something needs to be loaded the first time through?
+    // <$
+    // https://github.com/vercel/next.js/discussions/24445
+    // ;not_working;       "type": "node",
+    // ;not_working;       "name": "Next.js: debug server-side api",
+    // ;not_working;       "request": "attach",
+    // ;not_working;       "skipFiles": [
+    // ;not_working;         "<node_internals>/**",
+    // ;not_working;         "**/node_modules/**"
+    // ;not_working;       ],
+    {
+      "name": "Next.js: debug client-side",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000"
+    },
+  ]
+}

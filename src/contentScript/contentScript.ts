@@ -1,7 +1,10 @@
 // import 'chrome-types';
+import prettier from 'prettier';
+// Uncaught (in promise) ConfigError: Couldn't resolve parser "markdown". Plugins must be explicitly added to the standalone bundle.
+import parserMarkdown from 'prettier/plugins/markdown';
 
-import TurndownService from 'turndown';
-const turndownService = new TurndownService();
+import { convert_documentFragment_to_htmlStr, convert_selection_to_documentFragment } from './html_convertor';
+import { turndownServiceMain } from './turndown_service_main';
 
 // >"
 //   var win = iframe.contentWindow;
@@ -48,21 +51,19 @@ function get_seletion_insideIframe() {
   return win.getSelection();
 }
 
-function convert_selection_to_html(selectionText: Selection): string {
-  const range = selectionText.getRangeAt(0);
-  const clonedSelection = range.cloneContents();
-  const div = document.createElement('div');
-  div.appendChild(clonedSelection);
-  return div.innerHTML;
-}
-
 // https://stackoverflow.com/questions/14245334/sendmessage-from-extension-background-or-popup-to-content-script-doesnt-work
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   void (async () => {
     const selectionText = get_seletion_includingIframe();
 
     if (message.command === 'copyHtml') {
-      const html = selectionText == null ? '' : convert_selection_to_html(selectionText);
+      let html: string;
+      if (selectionText == null) {
+        html = '';
+      } else {
+        const documentFragment = convert_selection_to_documentFragment(selectionText);
+        html = convert_documentFragment_to_htmlStr(document, documentFragment);
+      }
       // G:\UsingTemp\copycat\src\utils\write-html-to-clipboard.ts
       // const blob = textToBlob(html, mimeType)
       // Javascript - Copy string to clipboard as text/html - Stack Overflow
@@ -77,10 +78,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // Uncaught (in promise) DOMException: Failed to execute 'writeText' on 'Clipboard': Document is not focused.
       await navigator.clipboard.write([clipboardItem]);
     } else if (message.command === 'copyMarkdown') {
+      // https://github.com/BlackGlory/copycat/blob/master/src/utils/convert-html-to-markdown.ts
+      // https://github.com/BlackGlory/copycat/blob/master/src/content-script.ts#L26
       // G:\UsingTemp\copycat\src\utils\convert-html-to-markdown.ts
       // G:\UsingTemp\copycat\src\utils\write-text-to-clipboard.ts
-      const html = selectionText == null ? '' : convert_selection_to_html(selectionText);
-      const markdown = turndownService.turndown(html);
+
+      let html: string;
+      if (selectionText == null) {
+        html = '';
+      } else {
+        const documentFragment = convert_selection_to_documentFragment(selectionText);
+        html = convert_documentFragment_to_htmlStr(document, documentFragment);
+        // html = convertHtml(documentFragment);
+      }
+      let markdown = turndownServiceMain.turndown(html);
+      markdown = await prettier.format(markdown, { parser: 'markdown', plugins: [parserMarkdown] });
       await navigator.clipboard.writeText(markdown);
     } else if (message.command === 'copyPlainText') {
       const txt = selectionText == null ? '' : selectionText.toString();

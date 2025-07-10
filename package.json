@@ -10,11 +10,13 @@
   },
   "devDependencies": {
     "@eslint/create-config": "^0.4.6",
+    "@types/jsdom": "^21.1.7",
     "@types/turndown": "^5.0.4",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
     "chrome-types": "^0.1.282",
     "eslint": "^8.53.0",
+    "jsdom": "^26.1.0",
     "ts-loader": "^9.5.1",
     "tsx": "^4.9.0",
     "typescript": "^5.4.5",
@@ -22,6 +24,8 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@guyplusplus/turndown-plugin-gfm": "^1.0.7",
+    "prettier": "^3.6.2",
     "turndown": "^7.1.3"
   }
 }

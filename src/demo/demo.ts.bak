@@ -1,0 +1,286 @@
+
+// html = `
+// <div>
+// AA
+//   <my-tag>CC</my-tag>
+//   <b>DD</b>
+// BB
+// </div>
+// `
+//   <em>EE</em>
+//   <mytag>FF</mytag>
+//   <katex>GG</katex
+
+// html = `
+// <div id="my-content">
+//   <h1>Project Summary</h1>
+//   <p>
+//     This is the first paragraph. It <strike>provides</strike> a general overview of the project and its main goals.
+//     <Box>ZZ</Box>
+//     <em>XX</em>
+//     <ms-katex _ngcontent-ng-c4063671643="" _nghost-ng-c1634742780="" class="inline ng-star-inserted">
+//       <pre _ngcontent-ng-c1634742780="">
+//         <code _ngcontent-ng-c1634742780="" class="rendered">
+//         SS
+//         </code>
+//       </pre>
+//     </ms-katex>
+//     <ms-katex _ngcontent-ng-c4063671643="" _nghost-ng-c1634742780="" class="inline ng-star-inserted">
+//       <pre _ngcontent-ng-c1634742780="">
+//         <code _ngcontent-ng-c1634742780="" class="rendered">
+//         SS
+//         </code>
+//       </pre>
+//     </ms-katex>
+//     <my-tag>CC</my-tag>
+//     <ms-katex>DD</ms-katex>
+//     <ms-katex>
+//       <pre>
+//         EE
+//       </pre>
+//     </ms-katex>
+//     <ms-katex _ngcontent-ng-c4063671643="" _nghost-ng-c1634742780="" class="inline ng-star-inserted">
+//       <pre>
+//         FF
+//       </pre>
+//     </ms-katex>
+//     <ms-katex _ngcontent-ng-c4063671643="" _nghost-ng-c1634742780="" class="inline ng-star-inserted">
+//       <pre _ngcontent-ng-c1634742780="">
+//         <code _ngcontent-ng-c1634742780="" class="rendered">
+//           GG
+//         </code>
+//       </pre>
+//     </ms-katex>
+//     <Box>ZZ</Box>
+//     <em>XX</em>
+//     <ms-katex _ngcontent-ng-c4063671643="" _nghost-ng-c1634742780="" class="inline ng-star-inserted">
+//       <pre _ngcontent-ng-c1634742780="">
+//         <code _ngcontent-ng-c1634742780="" class="rendered">
+//         SS
+//         </code>
+//       </pre>
+//     </ms-katex>
+//   </p>
+//   <p>
+//     222
+//   </p>
+// </div>
+// `;
+
+// html = `
+// <div id="my-content">
+//   <h1>Project Summary</h1>
+//   <p>
+//     This is the first paragraph. It <strike>provides</strike> a general overview of the project and its main goals.
+//     <my-tag>CC</my-tag>
+//     <ms-katex _ngcontent-ng-c4063671643="" _nghost-ng-c1634742780="" class="inline ng-star-inserted">
+//       <pre _ngcontent-ng-c1634742780="">
+//         <code _ngcontent-ng-c1634742780="" class="rendered">
+//         SS
+//         </code>
+//       </pre>
+//     </ms-katex>
+//     <ms-katex _ngcontent-ng-c4063671643="" _nghost-ng-c1634742780="" class="inline ng-star-inserted">
+//       <pre _ngcontent-ng-c1634742780="">
+//         <code _ngcontent-ng-c1634742780="" class="rendered">
+//         SS
+//         </code>
+//       </pre>
+//     </ms-katex>
+//   </p>
+//   <p>
+//     E
+//     <ms-katex _ngcontent-ng-c4063671643="" _nghost-ng-c1634742780="" class="inline ng-star-inserted">
+//     F
+//       <pre _ngcontent-ng-c1634742780="">
+//         <code _ngcontent-ng-c1634742780="" class="rendered">
+//         SS
+//         </code>
+//       </pre>
+//     </ms-katex>
+//   </p>
+// </div>
+// `;
+//
+// html = `
+// <div id="my-content">
+//   <p>
+//     <ms-katex>
+//       <pre>
+//         <code>
+//           foo
+//         </code>
+//       </pre>
+//     </ms-katex>
+//   </p>
+//   <my-sep>SEPARATOR</my-sep>
+//   <p>
+//     Add text so it shows
+//     <ms-katex>
+//       Add text so it shows
+//       <pre>
+//         <code>
+//           foo
+//         </code>
+//       </pre>
+//     </ms-katex>
+//   </p>
+// </div>
+// `;
+
+// ;main-test; // Parsing of nested Block-level element leads to skipping of some elements in filter. · Issue #497 · mixmark-io/turndown
+// ;main-test; // https://github.com/mixmark-io/turndown/issues/497
+// ;main-test; html = `
+// ;main-test;   <p>
+// ;main-test;       <pre>
+// ;main-test;           foo
+// ;main-test;       </pre>
+// ;main-test;   </p>
+// ;main-test;   <my-sep>SEPARATOR</my-sep>
+// ;main-test;   <p>
+// ;main-test;         <code>
+// ;main-test;           foo
+// ;main-test;         </code>
+// ;main-test;   </p>
+// ;main-test; `;
+
+// html = `
+// asd
+//                 <pre
+//                 >
+// adfasldfk
+// asdf
+// as
+// fasdf
+// sa
+//
+//   </pre>
+// asd
+// `
+
+
+
+// const document = new JSDOM().window.document;
+// const template = document.createElement('template');
+// template.innerHTML = html.trim();
+// const fragment = template.content;
+// const tempContainer = document.createElement('div');
+// tempContainer.appendChild(fragment.cloneNode(true));
+// const fragmentHtml = tempContainer.innerHTML;
+// console.log(fragmentHtml)
+
+// const document = new JSDOM(html, { contentType: 'text/html' }).window.document;
+// console.log(document.body.outerHTML);
+
+// const frag = JSDOM.fragment(html);
+// const frag = JSDOM.fr
+//
+// console.log(html)
+// for (const element of frag.children) {
+//   console.log(element.innerHTML)
+// }
+// console.log(document.body.outerHTML)
+
+// html = convert_documentFragment_to_htmlStr(document, fragment);
+// console.log(html)
+// let markdown = turndownServiceMain.turndown(html);
+// // markdown = await prettier.format(markdown, { parser: 'markdown' });
+// markdown = await prettier.format(markdown, { parser: 'markdown', plugins: [parserMarkdown] });
+// console.log(markdown);
+
+
+// html = `
+// AAA
+// <div id="my-content">
+//   <p>
+//     <ms-katex>
+//       <pre>
+//         <code>
+//           foo
+//         </code>
+//       </pre>
+//     </ms-katex>
+//   </p>
+// </div>
+// BBB
+// `;
+// 
+// const dom = new JSDOM(`<root/>`, { contentType: 'text/xml' });
+// const document = dom.window.document;
+// const { XMLSerializer } = dom.window;
+// const { DOMParser } = dom.window;
+// const parser = new DOMParser();
+// // Wrap the HTML content in a root element to make it valid XML
+// const wrappedHtml = `<root>${html}</root>`;
+// const parsedDoc = parser.parseFromString(wrappedHtml, 'text/xml');
+// const fragment = document.createDocumentFragment();
+// while (parsedDoc.documentElement.firstChild) {
+//   fragment.appendChild(parsedDoc.documentElement.firstChild);
+// }
+// 
+// const tempContainer = document.createElement('div');
+// tempContainer.appendChild(fragment.cloneNode(true));
+// const serializer = new XMLSerializer();
+// const fragmentXml = serializer.serializeToString(tempContainer);
+// console.log(fragmentXml);
+
+
+
+// html = `
+// <div>
+// AA
+// <pre>
+// []CC
+// <span>[]DD</span>
+// EE
+// </pre>
+// BB
+// </div>
+// `
+// 
+// html = `
+// <div>
+// AA
+// <pre>
+// <code>
+//   []CC
+//   <span>[]DD</span>
+//   EE
+// </code>
+// </pre>
+// BB
+// </div>
+// `
+// 
+// html = `
+// <div>
+// AA
+// <my-tag>
+//   <pre>
+//   <code>
+//     []CC
+//     <span>[]DD</span>
+//     EE
+//   </code>
+//   </pre>
+// </my-tag>
+// BB
+// </div>
+// `
+// 
+// html = `
+// <div>
+// AA
+// <my-tag>
+//   <pre>
+//     <div>
+//       []CC
+//       <span>[]DD</span>
+//       EE
+//     </div>
+//   </pre>
+// </my-tag>
+// BB
+// </div>
+// `
+
