@@ -93,6 +93,23 @@ turndownService.addRule('preCodeBlock', {
   },
   replacement: function (content, node, options) {
     // return '\n```\n' + node.textContent + '\n```\n';
+
+    // const firstChild = node.firstChild;
+    // // Node.TEXT_NODE
+    // if (firstChild && firstChild.nodeType === 3) {
+    //   const textContent = firstChild.textContent;
+    //   if (textContent && textContent.trim() === '') {
+    //     const elt_Code = node.firstElementChild;
+    //     // elt_Code?.insertAdjacentText('afterbegin', textContent);
+    //     if (elt_Code == null) {
+    //       throw new Error('elt_Code is null');
+    //     }
+    //     // elt_Code.prepend(firstChild);
+    //     elt_Code.insertBefore(firstChild, elt_Code.firstChild);
+    //   }
+    // }
+    // console.log('node:', node.outerHTML);
+
     const elt_Code = node.firstElementChild as HTMLElement;
     const className = elt_Code.getAttribute('class') || '';
     const language = (className.match(/language-(\S+)/) || [null, ''])[1];
@@ -116,6 +133,11 @@ turndownService.addRule('preCodeBlock', {
     // For code blocks, an extra indent is added to the final output. · Issue #499 · mixmark-io/turndown
     // https://github.com/mixmark-io/turndown/issues/499
     return 'NN\n\n' + fence + language + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n';
+
+    // const result = 'NN\n' + fence + language + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n'
+    // // const result = '\n\n' + fence + language + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n'
+    // // console.log('result:', result);
+    // return result;
   },
 });
 

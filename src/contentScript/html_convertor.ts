@@ -24,5 +24,30 @@ export function convert_documentFragment_to_htmlStr(document: Document, document
   // for (const elt_CodeBlock of div.querySelectorAll('ms-code-block pre>code')) {
   // }
 
+  // if
+  // the pre is inside a custom tag
+  // && there is no non-space text before the pre
+  // && there is a any leading space like: `<pre><code>      ` & `<pre>      <code>`
+  // for (const node of div.querySelectorAll('pre')) {
+  //   if (!(node.firstElementChild && node.firstElementChild.nodeName === 'CODE')) {
+  //     continue;
+  //   }
+  //   const firstChild = node.firstChild;
+  //   // Node.TEXT_NODE
+  //   if (firstChild && firstChild.nodeType === 3) {
+  //     const textContent = firstChild.textContent;
+  //     if (textContent && textContent.trim() === '') {
+  //       const elt_Code = node.firstElementChild;
+  //       // elt_Code?.insertAdjacentText('afterbegin', textContent);
+  //       if (elt_Code == null) {
+  //         throw new Error('elt_Code is null');
+  //       }
+  //       // elt_Code.prepend(firstChild);
+  //       elt_Code.insertBefore(firstChild, elt_Code.firstChild);
+  //     }
+  //   }
+  //   console.log(node.outerHTML);
+  // }
+
   return div.innerHTML;
 }
