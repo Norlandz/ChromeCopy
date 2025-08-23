@@ -4,6 +4,7 @@ import prettier from 'prettier';
 import parserMarkdown from 'prettier/plugins/markdown';
 
 import { convert_documentFragment_to_htmlStr, convert_selection_to_documentFragment } from './html_convertor';
+import { regex_indicator } from './regex_indicator';
 import { turndownServiceMain } from './turndown_service_main';
 
 // >"
@@ -84,15 +85,40 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // G:\UsingTemp\copycat\src\utils\write-text-to-clipboard.ts
 
       let html: string;
+      let textContent: string;
       if (selectionText == null) {
         html = '';
+        textContent = '';
       } else {
         const documentFragment = convert_selection_to_documentFragment(selectionText);
         html = convert_documentFragment_to_htmlStr(document, documentFragment);
         // html = convertHtml(documentFragment);
+        textContent = selectionText.toString();
+      }
+      // @timing_wrong
+      // let loop_count = 0;
+      // while (loop_count < 100) {
+      //   regex_indicator.code_block_beginning = `[rf-rgi-cb[${randomString(5)}]rf-rgi-cb]`;
+      //   if (!textContent.includes(regex_indicator.code_block_beginning)) {
+      //     break;
+      //   }
+      //   loop_count++;
+      // }
+      // if (regex_indicator.code_block_beginning == null) {
+      //   console.error('failed to generate random unique regex indicator for code block beginning after many loops');
+      //   return;
+      // }
+      let warning_message = null;
+      if (textContent.includes(regex_indicator.code_block_beginning)) {
+        warning_message = 'Warning: regex_indicator.code_block_beginning is present in the text content, inspect: ' + regex_indicator.code_block_beginning;
+        console.error(warning_message);
       }
       let markdown = turndownServiceMain.turndown(html);
+      // markdown = markdown.replace(regex_indicator.code_block_beginning, '');
       markdown = await prettier.format(markdown, { parser: 'markdown', plugins: [parserMarkdown] });
+      if (warning_message != null) {
+        markdown = markdown + '\n\n' + warning_message;
+      }
       await navigator.clipboard.writeText(markdown);
     } else if (message.command === 'copyPlainText') {
       const txt = selectionText == null ? '' : selectionText.toString();

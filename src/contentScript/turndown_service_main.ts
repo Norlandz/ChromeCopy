@@ -1,5 +1,6 @@
-import TurndownService from 'turndown';
 import type { Plugin } from 'turndown';
+import TurndownService from 'turndown';
+import { regex_indicator } from './regex_indicator';
 
 // import turndownPluginGfm from 'turndown-plugin-gfm';
 // @Xts-expect-error
@@ -132,7 +133,9 @@ turndownService.addRule('preCodeBlock', {
     // @bug: force to add a char to remove the extra code space gap
     // For code blocks, an extra indent is added to the final output. · Issue #499 · mixmark-io/turndown
     // https://github.com/mixmark-io/turndown/issues/499
-    return 'NN\n\n' + fence + language + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n';
+    // return 'NN\n\n' + fence + language + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n';
+    // @timing_wrong
+    return regex_indicator.code_block_beginning + '\n\n' + fence + language + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n';
 
     // const result = 'NN\n' + fence + language + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n'
     // // const result = '\n\n' + fence + language + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n'
