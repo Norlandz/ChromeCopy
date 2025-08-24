@@ -36,8 +36,6 @@ y[target_token_id] = <span class="hljs-number">1</span>
 `;
 
 
-// use xml to parse the html string
-// idk that allow of xml and html instance passing
 const document = new JSDOM('', { contentType: 'text/html' }).window.document;
 const docfrag = JSDOM.fragment(html);
 html = convert_documentFragment_to_htmlStr(document, docfrag);

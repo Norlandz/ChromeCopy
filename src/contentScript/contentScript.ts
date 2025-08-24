@@ -93,6 +93,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const documentFragment = convert_selection_to_documentFragment(selectionText);
         html = convert_documentFragment_to_htmlStr(document, documentFragment);
         // html = convertHtml(documentFragment);
+        console.info(html);
         textContent = selectionText.toString();
       }
       // @timing_wrong
@@ -114,7 +115,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.error(warning_message);
       }
       let markdown = turndownServiceMain.turndown(html);
-      // markdown = markdown.replace(regex_indicator.code_block_beginning, '');
+      markdown = markdown.replace(regex_indicator.code_block_beginning, '');
       markdown = await prettier.format(markdown, { parser: 'markdown', plugins: [parserMarkdown] });
       if (warning_message != null) {
         markdown = markdown + '\n\n' + warning_message;

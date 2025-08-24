@@ -9,7 +9,7 @@ export function convert_selection_to_documentFragment(selectionText: Selection):
 export function convert_documentFragment_to_htmlStr(document: Document, documentFragment: DocumentFragment): string {
   const div = document.createElement('div');
   div.appendChild(documentFragment);
-  console.log('convert_documentFragment_to_htmlStr', documentFragment, div.innerHTML);
+  // console.info('convert_documentFragment_to_htmlStr', documentFragment, div.innerHTML);
 
   // prevent parsing pre for inline latex
   for (const elt_KatexPre of div.querySelectorAll('ms-katex.inline pre')) {
@@ -18,6 +18,11 @@ export function convert_documentFragment_to_htmlStr(document: Document, document
     const elt = HtmlUtil.changeTagName(document, elt_KatexPre, 'div');
     // @messy
     elt.setAttribute('data-was-pre', 'true');
+  }
+
+  // deal with li inside custom tag problem
+  for (const elt_ms_cmark_node of div.querySelectorAll('ol > ms-cmark-node, ul > ms-cmark-node')) {
+    elt_ms_cmark_node.replaceWith(...elt_ms_cmark_node.childNodes);
   }
 
   // deal with pre inside custom tag problem
