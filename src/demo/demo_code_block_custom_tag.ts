@@ -44,6 +44,6 @@ html = convert_documentFragment_to_htmlStr(document, docfrag);
 let markdown = turndownServiceMain.turndown(html);
 // markdown = await prettier.format(markdown, { parser: 'markdown' });
 // console.log(markdown);
-markdown = markdown.replace(regex_indicator.code_block_beginning, '');
+markdown = markdown.replaceAll(regex_indicator.code_block_beginning, '');
 markdown = await prettier.format(markdown, { parser: 'markdown', plugins: [parserMarkdown] });
 console.log(markdown);

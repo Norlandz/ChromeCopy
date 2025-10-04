@@ -208,22 +208,66 @@ turndownService.addRule('inlineKatex', {
     // console.log('inlineKatex:', content);
     // console.log('inlineKatex:', node.outerHTML);
     // Find the annotation tag which holds the raw TeX source
-    const texSource = node.querySelector('annotation[encoding="application/x-tex"]');
+    const el_latex_anno = node.querySelector('annotation[encoding="application/x-tex"]');
     // console.log('texSource:', texSource?.textContent);
-    if (texSource) {
-      // Wrap the raw TeX in single dollar signs for inline math
-      // add extra space
-      return ` $${texSource.textContent?.trim()}$ `;
-      // @bug: this lib sucks
-      // pre inside ms-katex is forcing linebreaks? // unless I force add \n here?
-      // return '\nNO_LINE_BREAKS';
+    if (el_latex_anno == null) {
+      // Fallback if the annotation isn't found
+      console.error('el_latex_anno is not found', node);
+      return '';
     }
-    // Fallback if the annotation isn't found
-    return '';
+    // Wrap the raw TeX in single dollar signs for inline math
+    // add extra space
+    return ` $${el_latex_anno.textContent?.trim()}$ `;
+    // @bug: this lib sucks
+    // pre inside ms-katex is forcing linebreaks? // unless I force add \n here?
+    // return '\nNO_LINE_BREAKS';
   },
 });
 
-// 3. Rule for display LaTeX (<ms-katex class="display">)
+turndownService.addRule('inline_latex_zhihu', {
+  filter: function (node, options) {
+    //     ztext-math
+    // tex2jax_ignore math-holder
+    if (node.classList.contains('ztext-math')) {
+      return true;
+    }
+    return false;
+  },
+  replacement: function (content, node) {
+    // jsdom & nodejs env thing.... @no_time @8* 
+    // if (!(node instanceof Element)) {
+    //   console.error('node is not an Element', typeof node, node.constructor.name);
+    //   return '';
+    // }
+    const latex_str = (node as Element).getAttribute('data-tex');
+    if (latex_str == null) {
+      console.error('latex_str is not found', typeof node, node.constructor.name);
+      return '';
+    }
+    // console.log('latex_str:', latex_str);
+    return ` $${latex_str.trim()}$ `;
+  },
+});
+
+turndownService.addRule('inline_latex_wiki', {
+  filter: function (node, options) {
+    if (node.classList.contains('mwe-math-element')) {
+      return true;
+    }
+    return false;
+  },
+  replacement: function (content, node) {
+    const el_latex_anno = node.querySelector('annotation[encoding="application/x-tex"]');
+    if (el_latex_anno == null) {
+      console.error('el_latex_anno is not found', node);
+      return '';
+    }
+    // console.log('latex_str:', el_latex_anno.textContent.trim());
+    return ` $${el_latex_anno.textContent?.trim()}$ `;
+  },
+});
+
+// 3. Rule for block LaTeX (<ms-katex class="display">)
 turndownService.addRule('displayKatex', {
   filter: function (node, options) {
     if (node.nodeName.toLowerCase() === 'ms-katex' && node.classList.contains('display')) {

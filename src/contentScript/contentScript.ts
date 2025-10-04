@@ -115,7 +115,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.error(warning_message);
       }
       let markdown = turndownServiceMain.turndown(html);
-      markdown = markdown.replace(regex_indicator.code_block_beginning, '');
+      markdown = markdown.replaceAll(regex_indicator.code_block_beginning, '');
       markdown = await prettier.format(markdown, { parser: 'markdown', plugins: [parserMarkdown] });
       if (warning_message != null) {
         markdown = markdown + '\n\n' + warning_message;

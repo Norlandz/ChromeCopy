@@ -343,6 +343,6 @@ console.log(html);
 console.log('---')
 let markdown = turndownServiceMain.turndown(html);
 // console.log(markdown);
-markdown = markdown.replace(regex_indicator.code_block_beginning, '');
+markdown = markdown.replaceAll(regex_indicator.code_block_beginning, '');
 markdown = await prettier.format(markdown, { parser: 'markdown', plugins: [parserMarkdown] });
 console.log(markdown);
