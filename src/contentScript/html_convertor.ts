@@ -11,14 +11,14 @@ export function convert_documentFragment_to_htmlStr(document: Document, document
   div.appendChild(documentFragment);
   // console.info('convert_documentFragment_to_htmlStr', documentFragment, div.innerHTML);
 
-  // add wrap the inside of pre block with an extra code block, if pre didnt have one
-  for (const pre of div.querySelectorAll('pre')) {
-    if (!pre.firstElementChild || pre.firstElementChild.tagName !== 'CODE') {
-      const code = document.createElement('code');
-      code.append(...pre.childNodes);
-      pre.append(code);
-    }
-  }
+  // // add wrap the inside of pre block with an extra code block, if pre didnt have one
+  // for (const pre of div.querySelectorAll('pre')) {
+  //   if (!pre.firstElementChild || pre.firstElementChild.tagName !== 'CODE') {
+  //     const code = document.createElement('code');
+  //     code.append(...pre.childNodes);
+  //     pre.append(code);
+  //   }
+  // }
 
   // prevent parsing pre for inline latex
   for (const elt_KatexPre of div.querySelectorAll('ms-katex.inline pre')) {

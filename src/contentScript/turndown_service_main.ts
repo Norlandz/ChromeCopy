@@ -84,6 +84,51 @@ turndownService.use(gfm);
 function repeat(character: string, count: number) {
   return Array(count + 1).join(character);
 }
+
+/**
+ * Traverses a node's children to extract text content while
+ * converting <br> elements into newline characters.
+ * @param {Node} parentNode The parent node to extract text from.
+ * @returns {string} The formatted text content.
+ */
+function getTextWithLineBreaks(parentNode: Node): string {
+  let text = '';
+  // Loop through all direct child nodes of the parent
+  parentNode.childNodes.forEach((child: Node) => {
+    if (child.nodeType === Node.TEXT_NODE) {
+      // If it's a text node, append its content
+      text += child.textContent;
+    } else if (child.nodeType === Node.ELEMENT_NODE) {
+      // If it's an element node...
+      const element = child as HTMLElement;
+      if (element.nodeName === 'BR') {
+        // ...and it's a <br>, append a newline
+        text += '\n';
+      } else {
+        // For any other element (e.g., a <span> inside the <pre>),
+        // recursively call this function to process its children.
+        text += getTextWithLineBreaks(element);
+      }
+    }
+    // We can ignore other node types like comments, etc.
+  });
+  return text;
+}
+
+// dk the order of adding of the rule matters
+turndownService.addRule('pre_block', {
+  // nvm manually added in modification of the html... maybe dont do that ...
+  filter: function (node, options) {
+    // notice the !== code here ...
+    // console.log(node.nodeName, node.firstElementChild?.nodeName);
+    return !!(options.codeBlockStyle === 'fenced' && node.nodeName === 'PRE' && node.firstElementChild && node.firstElementChild.nodeName !== 'CODE');
+  },
+  replacement: function (content, node, options) {
+    // return '\n\n```\n' + node.textContent + '\n```\n\n';
+    return '\n\n```\n' + getTextWithLineBreaks(node) + '\n```\n\n';
+  },
+});
+
 // select 'ms-code-block pre:has(>code)'
 turndownService.addRule('preCodeBlock', {
   filter: function (node, options) {
@@ -234,7 +279,7 @@ turndownService.addRule('inline_latex_zhihu', {
     return false;
   },
   replacement: function (content, node) {
-    // jsdom & nodejs env thing.... @no_time @8* 
+    // jsdom & nodejs env thing.... @no_time @8*
     // if (!(node instanceof Element)) {
     //   console.error('node is not an Element', typeof node, node.constructor.name);
     //   return '';
@@ -260,6 +305,66 @@ turndownService.addRule('inline_latex_wiki', {
     const el_latex_anno = node.querySelector('annotation[encoding="application/x-tex"]');
     if (el_latex_anno == null) {
       console.error('el_latex_anno is not found', node);
+      return '';
+    }
+    // console.log('latex_str:', el_latex_anno.textContent.trim());
+    return ` $${el_latex_anno.textContent?.trim()}$ `;
+  },
+});
+
+// turndownService.addRule('inline_latex_stackexchange', {
+//   filter: function (node, options) {
+//     if (node.classList.contains('math-container')) {
+//       return true;
+//     }
+//     return false;
+//   },
+//   replacement: function (content, node) {
+//     const el_latex_anno = node.querySelector('script[type="math/tex"]');
+//     if (el_latex_anno == null) {
+//       console.error('el_latex_anno is not found', node);
+//       return '';
+//     }
+//     // console.log('latex_str:', el_latex_anno.textContent.trim());
+//     return ` $${el_latex_anno.textContent?.trim()}$ `;
+//   },
+// });
+
+function det_is_el_latex_annot_stackexchange(node: Element | null): node is HTMLScriptElement {
+  const el_latex_anno = node;
+  if (el_latex_anno == null) {
+    return false;
+  }
+  if (el_latex_anno.tagName.toLowerCase() !== 'script') {
+    return false;
+  }
+  if (el_latex_anno.getAttribute('type') !== 'math/tex') {
+    return false;
+  }
+  return true;
+}
+
+turndownService.addRule('inline_latex_stackexchange', {
+  filter: function (node, options) {
+    if (node.classList.contains('MathJax')) {
+      return true;
+    }
+    if (det_is_el_latex_annot_stackexchange(node)) {
+      return true;
+    }
+    return false;
+  },
+  replacement: function (content, node) {
+    // @path[20%]
+    if (det_is_el_latex_annot_stackexchange(node as Element)) {
+      // remove the duplicate of the script tag
+      return '';
+    }
+
+    // @path[normal]
+    const el_latex_anno = (node as HTMLElement).nextElementSibling;
+    if (!det_is_el_latex_annot_stackexchange(el_latex_anno)) {
+      console.error('el_latex_anno is not a math/tex script', el_latex_anno);
       return '';
     }
     // console.log('latex_str:', el_latex_anno.textContent.trim());
