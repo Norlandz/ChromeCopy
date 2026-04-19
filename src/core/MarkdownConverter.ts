@@ -2,14 +2,33 @@ import TurndownService from 'turndown';
 // @ts-ignore
 import * as turndownPluginGfm from '@guyplusplus/turndown-plugin-gfm';
 import { DomProcessor } from './DomProcessor';
+import { regex_indicator } from './regex_indicator';
 
 const gfm = turndownPluginGfm.gfm;
+
+function getTextWithLineBreaks(parentNode: Node): string {
+  let text = '';
+  parentNode.childNodes.forEach((child: Node) => {
+    if (child.nodeType === 3) {
+      text += child.textContent;
+    } else if (child.nodeType === 1) {
+      const element = child as HTMLElement;
+      if (element.nodeName === 'BR') {
+        text += '\n';
+      } else {
+        text += getTextWithLineBreaks(element);
+      }
+    }
+  });
+  return text;
+}
 
 export interface IPlatformAdapter {
   name: string;
   matches(url: string): boolean;
   preprocess(fragment: DocumentFragment): void;
   getRules(): TurndownService.Rule[];
+  getTagsToKeep?(): string[];
 }
 
 export class MarkdownConverter {
@@ -29,6 +48,40 @@ export class MarkdownConverter {
     });
 
     this.turndownService.use(gfm);
+
+    // Global Recovery: Restore legacy PRE block rules
+    this.turndownService.addRule('pre_block', {
+      filter: (node, options) => {
+        return !!(options.codeBlockStyle === 'fenced' && node.nodeName === 'PRE' && node.firstElementChild && node.firstElementChild.nodeName !== 'CODE');
+      },
+      replacement: (content, node) => {
+        return '\n\n```\n' + getTextWithLineBreaks(node) + '\n```\n\n';
+      },
+    });
+
+    this.turndownService.addRule('preCodeBlock', {
+      filter: (node, options) => {
+        return !!(options.codeBlockStyle === 'fenced' && node.nodeName === 'PRE' && node.firstElementChild && node.firstElementChild.nodeName === 'CODE');
+      },
+      replacement: (content, node, options) => {
+        const eltCode = node.firstElementChild as HTMLElement;
+        const className = eltCode.getAttribute('class') || '';
+        const language = (className.match(/language-(\S+)/) || [null, ''])[1];
+        const code = eltCode.textContent ?? '';
+        
+        const fenceChar = options.fence?.charAt(0) || '`';
+        let fenceSize = 3;
+        const fenceInCodeRegex = new RegExp('^' + fenceChar + '{3,}', 'gm');
+        let match;
+        while ((match = fenceInCodeRegex.exec(code))) {
+          if (match[0].length >= fenceSize) {
+            fenceSize = match[0].length + 1;
+          }
+        }
+        const fence = Array(fenceSize + 1).join(fenceChar);
+        return regex_indicator.code_block_beginning + '\n\n' + fence + language + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n';
+      },
+    });
   }
 
   public registerAdapter(adapter: IPlatformAdapter): void {
@@ -43,16 +96,20 @@ export class MarkdownConverter {
 
     // 1. General Pre-processing
     DomProcessor.normalizePreBlocks(fragment);
+    DomProcessor.trimStructure(fragment);
 
     // 2. Platform-specific Pre-processing
+    activeAdapters.forEach(a => a.preprocess(fragment));
+
+    // 3. Platform-specific Pre-processing
     activeAdapters.forEach(a => a.preprocess(fragment));
 
     // 3. Convert to HTML string for Turndown (ensuring it's treated as a block/fragment correctly)
     const container = document.createElement('div');
     container.appendChild(fragment.cloneNode(true));
     
-    // 4. Conversion
-    let markdown = this.turndownService.turndown(container.innerHTML);
+    // 4. Conversion - Pass the Node directly to preserve custom element tagging
+    let markdown = this.turndownService.turndown(container);
 
     // 5. Final Cleanup (if any)
     return markdown.trim();

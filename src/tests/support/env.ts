@@ -18,5 +18,6 @@ global.Element = window.Element as any;
 global.HTMLElement = window.HTMLElement as any;
 global.DocumentFragment = window.DocumentFragment as any;
 global.HTMLTemplateElement = window.HTMLTemplateElement as any;
+global.NodeFilter = (window as any).NodeFilter;
 
 export { dom, window };

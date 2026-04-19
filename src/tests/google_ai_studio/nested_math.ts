@@ -8,7 +8,7 @@ import { GoogleAIStudioAdapter } from '../../platforms/GoogleAIStudioAdapter';
  * is correctly identified and wrapped in $ delimiters.
  */
 
-const html = `
+const html = String.raw`
 <ul class="ng-star-inserted">
   <li class="ng-star-inserted">
     <ms-cmark-node>

@@ -8,7 +8,7 @@ import { GoogleAIStudioAdapter } from '../../platforms/GoogleAIStudioAdapter';
  * identified and wrapped in $$ delimiters.
  */
 
-const html = `
+const html = String.raw`
 <ms-katex class="display">
   <pre>
     <code class="rendered">
@@ -18,7 +18,7 @@ const html = `
             <math display="block">
               <semantics>
                 <mrow><msub><mi mathvariant="script">L</mi><mtext>MacroDice</mtext></msub><mo>=</mo><mn>1</mn><mo>−</mo><mn>...</mn></mrow>
-                <annotation encoding="application/x-tex">\\mathcal{L}_{\\text{MacroDice}} = 1 - \\frac{1}{|\\mathcal{C}|} \\sum_{c \\in \\mathcal{C}} DSC_c = 1 - \\frac{1}{|\\mathcal{C}|} \\sum_{c \\in \\mathcal{C}} \\left( \\frac{2 \\sum_i t_{ci} p_{ci} + \\epsilon}{\\sum_i t_{ci} + \\sum_i p_{ci} + \\epsilon} \\right)</annotation>
+                <annotation encoding="application/x-tex">\mathcal{L}_{\text{MacroDice}} = 1 - \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} DSC_c = 1 - \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \left( \frac{2 \sum_i t_{ci} p_{ci} + \epsilon}{\sum_i t_{ci} + \sum_i p_{ci} + \epsilon} \right)</annotation>
               </semantics>
             </math>
           </span>
