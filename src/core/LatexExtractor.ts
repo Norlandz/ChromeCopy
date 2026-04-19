@@ -6,27 +6,27 @@ export class LatexExtractor {
   /**
    * Attempts to extract LaTeX source from a given element.
    */
-  public static extract(element: Element): string | null {
-    // 1. Check for KaTeX/MathML <annotation> tag (Gold standard)
-    const annotation = element.querySelector('annotation[encoding="application/x-tex"]');
+  public static extract(node: Element): string | null {
+    // Stage 1: Look for standard Katex annotation
+    const annotation = node.querySelector('annotation[encoding="application/x-tex"]');
     if (annotation && annotation.textContent) {
       return annotation.textContent.trim();
     }
 
-    // 2. Check for MathJax <script type="math/tex"> (Common in older sites)
-    const mathJaxScript = element.querySelector('script[type="math/tex"]');
-    if (mathJaxScript && mathJaxScript.textContent) {
-      return mathJaxScript.textContent.trim();
+    // Stage 2: Fallback to common math holders (legacy / other platforms)
+    const scriptMath = node.querySelector('script[type^="math/tex"]');
+    if (scriptMath && scriptMath.textContent) {
+      return scriptMath.textContent.trim();
     }
 
-    // 3. Check for data-tex attribute (Used by Zhihu and some custom implementations)
-    const dataTex = element.getAttribute('data-tex') || element.querySelector('[data-tex]')?.getAttribute('data-tex');
+    // Stage 3: Check for data-tex attribute (Used by Zhihu and some custom implementations)
+    const dataTex = node.getAttribute('data-tex') || node.querySelector('[data-tex]')?.getAttribute('data-tex');
     if (dataTex) {
       return dataTex.trim();
     }
 
-    // 4. Check for Alt text (Wikipedia fallback)
-    const mathImg = element.querySelector('img.mwe-math-fallback-image-inline, img.mwe-math-fallback-image-display');
+    // Stage 4: Check for Alt text (Wikipedia fallback)
+    const mathImg = node.querySelector('img.mwe-math-fallback-image-inline, img.mwe-math-fallback-image-display');
     if (mathImg && mathImg.getAttribute('alt')) {
       return mathImg.getAttribute('alt')?.trim() || null;
     }

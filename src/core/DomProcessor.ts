@@ -27,27 +27,12 @@ export class DomProcessor {
         // Fallback for when the wrapper is the root of the fragment
         // We can't remove it from parent, but we can replace it with a DocFrag
         const docFrag = document.createDocumentFragment();
-        docFrag.append(...wrapper.childNodes);
+        docFrag.append(...Array.from(wrapper.childNodes));
         wrapper.replaceWith(docFrag);
       }
     }
   }
 
-  /**
-   * Normalizes <pre> elements inside custom tags that Turndown might misinterpret.
-   */
-  public static normalizePreBlocks(fragment: ParentNode): void {
-    // Google AI Studio puts <pre> inside <ms-katex>. 
-    // Turndown's default rules often treat <pre> as a block, even if it's "inline" math.
-    // We convert these to <span> to hint Turndown to treat them as phrasing content.
-    const katexPres = fragment.querySelectorAll('ms-katex.inline pre');
-    katexPres.forEach(pre => {
-      const span = document.createElement('span');
-      span.setAttribute('data-was-pre', 'true');
-      span.append(...pre.childNodes);
-      pre.replaceWith(span);
-    });
-  }
 
   public static trimStructure(fragment: ParentNode): void {
     // Aggressively remove whitespace-only text nodes that sit between 
@@ -67,6 +52,6 @@ export class DomProcessor {
       }
       node = walker.nextNode();
     }
-    nodesToRemove.forEach(n => n.remove());
+    nodesToRemove.forEach(n => (n as Element).remove());
   }
 }

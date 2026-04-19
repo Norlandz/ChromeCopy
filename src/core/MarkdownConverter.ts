@@ -95,13 +95,9 @@ export class MarkdownConverter {
     const activeAdapters = this.adapters.filter(a => a.matches(url));
 
     // 1. General Pre-processing
-    DomProcessor.normalizePreBlocks(fragment);
     DomProcessor.trimStructure(fragment);
 
     // 2. Platform-specific Pre-processing
-    activeAdapters.forEach(a => a.preprocess(fragment));
-
-    // 3. Platform-specific Pre-processing
     activeAdapters.forEach(a => a.preprocess(fragment));
 
     // 3. Convert to HTML string for Turndown (ensuring it's treated as a block/fragment correctly)
