@@ -109,7 +109,9 @@ export class MarkdownConverter {
     // 4. Conversion - Pass the Node directly to preserve custom element tagging
     let markdown = this.turndownService.turndown(container);
 
-    // 5. Final Cleanup (if any)
+    // 5. Post-Conversion Cleanup
+    markdown = markdown.replace(/【CC_BULLET】/g, '-');
+
     return markdown.trim();
   }
 }

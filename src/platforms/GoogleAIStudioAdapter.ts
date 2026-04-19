@@ -14,78 +14,100 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
     // 1. Initial cleanup of custom wrapper nodes
     DomProcessor.flattenCustomWrappers(fragment, ['ms-cmark-node']);
 
-    // 2. Structural Re-stitching (Fix Shadow DOM ejection)
-    const blockStoppers = ['UL', 'OL', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HR', 'BLOCKQUOTE', 'TABLE', 'LI'];
-    const topLevelPs = Array.from(fragment.childNodes).filter(n => n.nodeName === 'P');
-    topLevelPs.forEach(pNode => {
-      const p = pNode as Element;
-      let next = p.nextSibling;
-      while (next) {
-        if (next.nodeType === 3) {
-          p.appendChild(next);
-        } else if (next.nodeType === 1) {
-          const el = next as Element;
-          if (blockStoppers.includes(el.tagName)) break;
-          
-          if (el.tagName === 'P') {
-            while (el.firstChild) p.appendChild(el.firstChild);
-            el.remove();
+    // 2. Targeted Visual Purge
+    const junkSelectors = [
+      '.katex-html', 
+      '.katex-mathml', 
+      'span[class*="rf-rgi-cb"]', 
+      'span[id*="zva"]',
+      'button',
+      'ms-tooltip'
+    ];
+    junkSelectors.forEach(sel => {
+      const junk = Array.from(fragment.querySelectorAll(sel));
+      junk.forEach(j => j.remove());
+    });
+
+    // 3. Surgical Re-stitching (Shadow DOM ejection fix)
+    const blockStoppers = ['UL', 'OL', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HR', 'BLOCKQUOTE', 'TABLE', 'LI', 'PRE'];
+    const nodes = Array.from(fragment.childNodes);
+    nodes.forEach(node => {
+      if (node.nodeType === 1 && node.nodeName === 'P') {
+        const p = node as Element;
+        let next = p.nextSibling;
+        while (next) {
+          if (next.nodeType === 3) {
+            p.appendChild(next);
+          } else if (next.nodeType === 1) {
+            const el = next as Element;
+            if (blockStoppers.includes(el.tagName)) break;
+            if (el.tagName === 'P') {
+              while (el.firstChild) p.appendChild(el.firstChild);
+              el.remove();
+            } else {
+              p.appendChild(el);
+            }
           } else {
-            p.appendChild(el);
+            p.appendChild(next);
           }
-        } else {
-          p.appendChild(next);
+          next = p.nextSibling;
         }
-        next = p.nextSibling;
       }
     });
 
-    // 3. High-Fidelity Normalization (Surgical Source preservation)
-    // We target math nodes and replace them with clean spans.
-    const mathHolders = Array.from(fragment.querySelectorAll('ms-katex, div[data-was-pre="true"], pre.display'));
-    mathHolders.forEach(node => {
-      // If this node is already inside a holder we just created, skip it
-      if (node.closest('.chrome-copy-math-holder')) return;
-
+    // 3. Precision Math Normalization (Protected Token Strategy)
+    const mathNodes = Array.from(fragment.querySelectorAll('ms-katex, div[data-was-pre="true"], pre.display'));
+    mathNodes.forEach(node => {
       const source = node.querySelector('annotation[encoding="application/x-tex"], script[type^="math/tex"]');
-      if (!source) return;
+      const latex = source?.textContent?.trim() || '';
+      if (!latex) return;
 
       const isDisplay = node.classList.contains('display') || 
-                        node.tagName === 'PRE' ||
-                        node.querySelector('.katex-display') !== null;
+                        node.getAttribute('class')?.includes('display') ||
+                        node.querySelector('.katex-display') !== null ||
+                        node.tagName === 'PRE';
 
-      const holder = fragment.ownerDocument.createElement('span');
+      // Use CODE tag to protect content from Turndown escaping
+      const holder = fragment.ownerDocument.createElement('code');
       holder.className = 'chrome-copy-math-holder';
       if (isDisplay) holder.classList.add('display');
+      holder.textContent = `@@CHROME_MATH@@${latex}@@`;
       
-      holder.appendChild(source);
-      node.replaceWith(holder);
+      if (node.parentNode) {
+        node.parentNode.replaceChild(holder, node);
+      }
     });
 
-    // 4. Cleanup Artifacts
-    const artifacts = Array.from(fragment.querySelectorAll('ms-katex, [data-was-pre="true"], .katex-html, .katex-mathml'));
-    artifacts.forEach(a => a.remove());
+    // 4. Total Structural Flattening (Kill all intermediate spans)
+    DomProcessor.flattenCustomWrappers(fragment, ['ms-katex', 'ms-cmark-node', 'span']);
 
-    // 5. Final Paragraph Normalization (Whitespace & Sentence Integrity)
+    // 5. Final Sentence Normalization
     const allPs = Array.from(fragment.querySelectorAll('p'));
     allPs.forEach(p => {
-      // 5a. Collapse all whitespace inside text nodes
-      const walker = fragment.ownerDocument.createTreeWalker(p, NodeFilter.SHOW_TEXT);
-      let tNode: Node | null;
-      while (tNode = walker.nextNode()) {
-        tNode.textContent = tNode.textContent?.replace(/\s+/g, ' ') || '';
-      }
-      
-      // 5b. Remove leading/trailing space in the paragraph's inner text flow
-      if (p.firstChild && p.firstChild.nodeType === 3) {
-        p.firstChild.textContent = p.firstChild.textContent?.trimStart() || '';
-      }
-      if (p.lastChild && p.lastChild.nodeType === 3) {
-        p.lastChild.textContent = p.lastChild.textContent?.trimEnd() || '';
+      // 5a. Mask Bullet Markers to stop Turndown list-item logic
+      if (p.firstChild?.nodeType === 3) {
+        const text = p.firstChild.textContent || '';
+        if (text.startsWith('- ')) {
+          p.firstChild.textContent = text.replace(/^- /, '【CC_BULLET】 ');
+        }
       }
 
-      // 5c. Cleanup empty paragraphs
-      if (!p.textContent?.trim() && !p.querySelector('.chrome-copy-math-holder')) {
+      // 5b. Whitespace Normalization (inside P only)
+      const walker = fragment.ownerDocument.createTreeWalker(p, 4); // SHOW_TEXT
+      let tNode: Node | null;
+      while (tNode = walker.nextNode()) {
+        const text = tNode.textContent || '';
+        // Skip math placeholders
+        if (text.includes('@@CHROME_MATH@@')) continue;
+        tNode.textContent = text.replace(/[\n\r\t]+/g, ' ');
+      }
+      p.normalize();
+
+      // 5c. Trim boundaries
+      if (p.lastChild?.nodeType === 3) p.lastChild.textContent = p.lastChild.textContent?.trimEnd() || '';
+      if (p.firstChild?.nodeType === 3) p.firstChild.textContent = p.firstChild.textContent?.trimStart() || '';
+      
+      if (!p.textContent?.trim() && !p.querySelector('.chrome-copy-math-holder, img')) {
         p.remove();
       }
     });
@@ -99,8 +121,10 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
         },
         replacement: (content: string, node: Node) => {
           const el = node as Element;
-          const latex = LatexExtractor.extract(el);
-          if (!latex) return content;
+          // Extract latex from the protected token
+          const match = content.match(/@@CHROME_MATH@@([\s\S]*?)@@/);
+          const latex = match ? match[1] : content.trim();
+          if (!latex) return '';
           
           const isDisplay = el.classList.contains('display');
           return isDisplay ? `\n\n$$\n${latex}\n$$\n\n` : `$${latex}$`;

@@ -36,7 +36,7 @@ export class DomProcessor {
   public static trimStructure(fragment: ParentNode): void {
     // Aggressively remove whitespace-only text nodes that sit between 
     // block-like elements or around math nodes, as these trigger Turndown newlines.
-    const walker = document.createTreeWalker(fragment, NodeFilter.SHOW_TEXT);
+    const walker = (fragment.ownerDocument || document as any).createTreeWalker(fragment, NodeFilter.SHOW_TEXT);
     const nodesToRemove: Node[] = [];
     let node: Node | null = walker.nextNode();
     
