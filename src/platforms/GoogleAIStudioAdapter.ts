@@ -22,20 +22,46 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
   public preprocess(fragment: DocumentFragment): void {
     DomProcessor.flattenCustomWrappers(fragment, ['ms-cmark-node']);
 
-    // Fix orphaned siblings: move them back into the preceding container
-    // and ensure the container is a DIV.
+    // 2. Structural Re-stitching: Fix the "Shadow DOM Sibling" bug
+    // We greedily move all following siblings that are not "real" blocks back into the container.
+    // This handles cases where the browser pops math and punctuation out of a paragraph.
     const containers = Array.from(fragment.querySelectorAll('p, div'));
     containers.forEach(container => {
-      const next = container.nextElementSibling;
-      if (next && (next.tagName === 'MS-KATEX' || next.tagName === 'PRE' || next.tagName === 'DIV')) {
-        const hasMath = next.tagName === 'MS-KATEX' || next.querySelector('ms-katex, .katex, annotation[encoding="application/x-tex"]');
-        if (hasMath) {
-          container.appendChild(next);
+      let next = container.nextElementSibling;
+      
+      while (next) {
+        const tag = next.tagName.toLowerCase();
+        const hasMath = next.querySelector('ms-katex, .katex, annotation[encoding="application/x-tex"]') !== null;
+        
+        // We stitch if it's a math holder, a fragmented tag (ng-star), OR just plain inline content (span/text)
+        // that belongs to this sentence. We stop at "hard" blocks like P, UL, LI, or another DIV.
+        const isInlineOrMangled = tag === 'ms-katex' || tag === 'pre' || tag === 'span' || tag === 'strong' || tag === 'em' || tag === 'code';
+        const isTextOnlyDiv = tag === 'div' && next.querySelectorAll('p, ul, li, div').length === 0;
+
+        if (hasMath || isInlineOrMangled || isTextOnlyDiv) {
+          const toMove = next;
+          next = next.nextElementSibling;
+          container.appendChild(toMove);
+        } else {
+          break;
         }
       }
-      
-      if (container.tagName === 'P' && container.querySelector('ms-katex, .katex, pre')) {
+
+      // Promote P to DIV if it contains math or fragmented blocks to avoid further mangling
+      if (container.tagName === 'P' && (container.querySelector('ms-katex, .katex, pre') || container.childNodes.length > 5)) {
         GoogleAIStudioAdapter.promotePToDiv(container as HTMLParagraphElement);
+      }
+    });
+
+    // 3. Inline Normalization
+    // If we moved a PRE block into a container, normalize it to SPAN to treat it as inline.
+    const nestedPres = Array.from(fragment.querySelectorAll('div pre, p pre'));
+    nestedPres.forEach(pre => {
+      if (pre.querySelector('annotation, .katex-mathml')) {
+        const span = fragment.ownerDocument.createElement('span');
+        Array.from(pre.attributes).forEach(attr => span.setAttribute(attr.name, attr.value));
+        span.append(...Array.from(pre.childNodes));
+        pre.replaceWith(span);
       }
     });
   }
@@ -43,15 +69,15 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
   public getRules(): TurndownService.Rule[] {
     return [
       {
-        // Robust Math Rule: Matches ms-katex AND its mangled siblings (PRE)
+        // Robust Math Rule: Matches ms-katex AND its mangled/normalized siblings (PRE or SPAN)
         filter: (node: Node) => {
           const el = node as Element;
           const tag = el.tagName.toLowerCase();
           
           if (tag === 'ms-katex') return true;
           
-          // Mangled sibling case: ONLY match PRE if it is a pure math holder.
-          if (tag === 'pre') {
+          // Match mangled holders (PRE) or normalized holders (SPAN) that contain math metadata
+          if (tag === 'pre' || tag === 'span') {
             return !!el.querySelector('annotation[encoding="application/x-tex"], .katex-mathml');
           }
           

@@ -104,7 +104,7 @@ export class MarkdownConverter {
     const container = document.createElement('div');
     container.appendChild(fragment.cloneNode(true));
     
-    console.log('CONTAINER HTML:', container.innerHTML);
+    // console.log('CONTAINER HTML:', container.innerHTML);
 
     // 4. Conversion - Pass the Node directly to preserve custom element tagging
     let markdown = this.turndownService.turndown(container);
