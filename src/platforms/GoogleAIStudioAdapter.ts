@@ -25,13 +25,20 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
     // 1. Tag Normalization (Kill internal block breaks)
     const mathHolders = Array.from(fragment.querySelectorAll('ms-katex, pre, div[data-was-pre="true"]'));
     mathHolders.forEach(holder => {
-      const hasMath = !!holder.querySelector('annotation, .katex-mathml');
-      if (hasMath) {
+      if (holder.querySelector('annotation, .katex-mathml')) {
+        const blocksInside = Array.from(holder.querySelectorAll('div, pre, p'));
+        blocksInside.forEach(b => {
+          const s = fragment.ownerDocument.createElement('span');
+          Array.from(b.attributes).forEach(attr => s.setAttribute(attr.name, attr.value));
+          s.append(...Array.from(b.childNodes));
+          b.replaceWith(s);
+        });
+
         const span = fragment.ownerDocument.createElement('span');
         Array.from(holder.attributes).forEach(attr => span.setAttribute(attr.name, attr.value));
         span.classList.add('chrome-copy-math-holder');
-        const children = Array.from(holder.childNodes);
-        children.forEach(child => {
+        const items = Array.from(holder.childNodes);
+        items.forEach(child => {
           if (child.nodeType === 3 && child.textContent?.trim() === '') return;
           span.appendChild(child);
         });
@@ -39,31 +46,54 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
       }
     });
 
-    // 2. Structural Stability (P to DIV)
-    // Promote paragraphs that contain math to DIV so they can legally hold pre/div children
+    // 2. Fragment-Wide Formatting Purge
+    const purgeNodes = (root: ParentNode) => {
+      Array.from(root.childNodes).forEach(node => {
+        if (node.nodeType === 3 && node.textContent?.trim() === '' && node.textContent?.includes('\n')) {
+          node.remove();
+        } else if (node.nodeType === 1 && ['P', 'DIV', 'LI', 'SPAN'].includes((node as Element).tagName)) {
+          purgeNodes(node as ParentNode);
+        }
+      });
+    };
+    purgeNodes(fragment);
+
+    // 3. Structural Stability (P to DIV)
+    // Promote paragraphs that will hold or precede math to DIV so they can legally hold block children
     const paragraphs = Array.from(fragment.querySelectorAll('p'));
     paragraphs.forEach(p => {
-      if (p.querySelector('.chrome-copy-math-holder')) {
+      if (p.querySelector('.chrome-copy-math-holder, ms-katex, pre, div')) {
         GoogleAIStudioAdapter.promotePToDiv(p as HTMLParagraphElement);
       }
     });
 
-    // 3. Surgical Re-fusion (Fix Shadow DOM ejection)
-    const blocks = Array.from(fragment.querySelectorAll('div, p'));
-    blocks.forEach(block => {
-      let next = block.nextElementSibling;
-      while (next && (next.tagName === 'SPAN' || next.tagName === 'MS-KATEX' || next.classList.contains('chrome-copy-math-holder'))) {
-        block.appendChild(next);
-        next = block.nextElementSibling;
-      }
+    // 4. Zero-Width Space (ZWS) Glue
+    const holders = Array.from(fragment.querySelectorAll('.chrome-copy-math-holder'));
+    holders.forEach(holder => {
+      const zws1 = holder.ownerDocument.createTextNode('\u200B');
+      const zws2 = holder.ownerDocument.createTextNode('\u200B');
+      holder.parentNode?.insertBefore(zws1, holder);
+      holder.parentNode?.insertBefore(zws2, holder.nextSibling);
     });
 
-    // 4. Text Stabilization
-    const walker = fragment.ownerDocument.createTreeWalker(fragment, 4 /* SHOW_TEXT */);
-    let node;
-    while (node = walker.nextNode()) {
-      node.textContent = node.textContent?.replace(/\n\s*/g, ' ') || '';
-    }
+    // 5. Parent-Locked Structural Restitching
+    // Fusion of "ejected" siblings to ensure sentence integrity, even within LI
+    const containers = Array.from(fragment.querySelectorAll('div, p'));
+    containers.forEach(container => {
+      let next = container.nextElementSibling;
+      while (next) {
+        const isMath = next.tagName === 'MS-KATEX' || next.classList.contains('chrome-copy-math-holder');
+        const isInline = next.tagName === 'SPAN';
+        const isFragmentP = next.tagName === 'P' || (next.tagName === 'DIV' && !next.querySelector('ul, li, blockquote'));
+        
+        if (isMath || isInline || isFragmentP) {
+          container.appendChild(next);
+          next = container.nextElementSibling;
+        } else {
+          break;
+        }
+      }
+    });
   }
 
   public getRules(): TurndownService.Rule[] {
@@ -83,7 +113,7 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
                             el.closest('.display') !== null || 
                             el.querySelector('.katex-display') !== null;
                             
-          return isDisplay ? `\n\n$$\n${latex}\n$$\n\n` : ` $${latex}$ `;
+          return isDisplay ? `\n\n$$\n${latex}\n$$\n\n` : `$${latex}$`;
         }
       },
       {
@@ -91,7 +121,7 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
           return node.nodeName.toLowerCase() === 'span' && (node as Element).classList.contains('inline-code');
         },
         replacement: (content: string) => {
-          return ` \`${content.trim()}\` `;
+          return `\`${content.trim()}\``;
         }
       }
     ];

@@ -25,8 +25,7 @@ export class DomProcessor {
         wrapper.remove();
       } else {
         // Fallback for when the wrapper is the root of the fragment
-        // We can't remove it from parent, but we can replace it with a DocFrag
-        const docFrag = document.createDocumentFragment();
+        const docFrag = (wrapper.ownerDocument || document).createDocumentFragment();
         docFrag.append(...Array.from(wrapper.childNodes));
         wrapper.replaceWith(docFrag);
       }
