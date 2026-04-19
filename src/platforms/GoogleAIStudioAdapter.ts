@@ -22,52 +22,57 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
   public preprocess(fragment: DocumentFragment): void {
     DomProcessor.flattenCustomWrappers(fragment, ['ms-cmark-node']);
 
-    // 1. Structural Stability (P to DIV)
-    // Avoid browsers mangling <p> tags by ejecting block-level math nodes.
+    // 1. Tag Normalization (Kill internal block breaks)
+    const mathHolders = Array.from(fragment.querySelectorAll('ms-katex, pre, div[data-was-pre="true"]'));
+    mathHolders.forEach(holder => {
+      const hasMath = !!holder.querySelector('annotation, .katex-mathml');
+      if (hasMath) {
+        const span = fragment.ownerDocument.createElement('span');
+        Array.from(holder.attributes).forEach(attr => span.setAttribute(attr.name, attr.value));
+        span.classList.add('chrome-copy-math-holder');
+        const children = Array.from(holder.childNodes);
+        children.forEach(child => {
+          if (child.nodeType === 3 && child.textContent?.trim() === '') return;
+          span.appendChild(child);
+        });
+        holder.replaceWith(span);
+      }
+    });
+
+    // 2. Structural Stability (P to DIV)
+    // Promote paragraphs that contain math to DIV so they can legally hold pre/div children
     const paragraphs = Array.from(fragment.querySelectorAll('p'));
     paragraphs.forEach(p => {
-      if (p.querySelector('ms-katex, .katex, pre, div[data-was-pre]')) {
+      if (p.querySelector('.chrome-copy-math-holder')) {
         GoogleAIStudioAdapter.promotePToDiv(p as HTMLParagraphElement);
       }
     });
 
-    // 2. Targeted Re-stitching
-    // Pull orphaned math siblings back into their preceding container.
-    const containers = Array.from(fragment.querySelectorAll('div, p'));
-    containers.forEach(container => {
-      let next = container.nextElementSibling;
-      while (next && (next.tagName === 'MS-KATEX' || next.tagName === 'PRE' || (next.tagName === 'DIV' && next.getAttribute('data-was-pre') === 'true'))) {
-         container.appendChild(next);
-         next = container.nextElementSibling;
+    // 3. Surgical Re-fusion (Fix Shadow DOM ejection)
+    const blocks = Array.from(fragment.querySelectorAll('div, p'));
+    blocks.forEach(block => {
+      let next = block.nextElementSibling;
+      while (next && (next.tagName === 'SPAN' || next.tagName === 'MS-KATEX' || next.classList.contains('chrome-copy-math-holder'))) {
+        block.appendChild(next);
+        next = block.nextElementSibling;
       }
     });
 
-    // 3. Inline Normalization (The Line-Break Fix)
-    // Convert all math-holding block elements to SPANs to force Turndown into inline mode.
-    const mathBlocks = Array.from(fragment.querySelectorAll('pre, div[data-was-pre="true"], ms-katex'));
-    mathBlocks.forEach(block => {
-      if (block.querySelector('annotation, .katex-mathml')) {
-        const span = fragment.ownerDocument.createElement('span');
-        Array.from(block.attributes).forEach(attr => span.setAttribute(attr.name, attr.value));
-        span.append(...Array.from(block.childNodes));
-        block.replaceWith(span);
-      }
-    });
+    // 4. Text Stabilization
+    const walker = fragment.ownerDocument.createTreeWalker(fragment, 4 /* SHOW_TEXT */);
+    let node;
+    while (node = walker.nextNode()) {
+      node.textContent = node.textContent?.replace(/\n\s*/g, ' ') || '';
+    }
   }
 
   public getRules(): TurndownService.Rule[] {
     return [
       {
-        // High-fidelity Math Rule
         filter: (node: Node) => {
-          const el = node as Element;
+          const el = node as HTMLElement;
           const tag = el.tagName.toLowerCase();
-          
-          // Match our normalized spans or the original tags if they escaped normalization
-          return tag === 'ms-katex' || 
-                 tag === 'pre' || 
-                 (tag === 'div' && el.getAttribute('data-was-pre') === 'true') ||
-                 (tag === 'span' && el.querySelector('annotation, .katex-mathml') !== null);
+          return tag === 'ms-katex' || el.classList.contains('chrome-copy-math-holder');
         },
         replacement: (content: string, node: Node) => {
           const el = node as Element;
