@@ -9,17 +9,19 @@ export class LatexExtractor {
   public static extract(node: Element): string | null {
     // Stage 1: Look for standard Katex annotation
     const annotation = node.querySelector('annotation[encoding="application/x-tex"]');
-    if (annotation && annotation.textContent) {
-      return annotation.textContent.trim();
+    // Ensure we ONLY take the text content of the annotation element itself
+    if (annotation) {
+      return annotation.textContent?.trim() || null;
     }
 
     // Stage 2: Fallback to common math holders (legacy / other platforms)
     const scriptMath = node.querySelector('script[type^="math/tex"]');
-    if (scriptMath && scriptMath.textContent) {
-      return scriptMath.textContent.trim();
+    if (scriptMath) {
+      return scriptMath.textContent?.trim() || null;
     }
 
     // Stage 3: Check for data-tex attribute (Used by Zhihu and some custom implementations)
+    // First check the node itself, then children
     const dataTex = node.getAttribute('data-tex') || node.querySelector('[data-tex]')?.getAttribute('data-tex');
     if (dataTex) {
       return dataTex.trim();
@@ -27,8 +29,9 @@ export class LatexExtractor {
 
     // Stage 4: Check for Alt text (Wikipedia fallback)
     const mathImg = node.querySelector('img.mwe-math-fallback-image-inline, img.mwe-math-fallback-image-display');
-    if (mathImg && mathImg.getAttribute('alt')) {
-      return mathImg.getAttribute('alt')?.trim() || null;
+    if (mathImg) {
+      const alt = mathImg.getAttribute('alt');
+      if (alt) return alt.trim();
     }
 
     return null;

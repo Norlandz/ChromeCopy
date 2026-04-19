@@ -17,13 +17,14 @@ export class WikipediaAdapter implements IPlatformAdapter {
     return [
       {
         filter: (node: Node) => {
-          return (node as Element).classList?.contains('mwe-math-element');
+          const el = node as Element;
+          // Wikipedia uses mwe-math-element classes
+          return el.classList?.contains('mwe-math-element') || el.classList?.contains('mwe-math-fallback-image-inline');
         },
         replacement: (content: string, node: Node) => {
           const latex = LatexExtractor.extract(node as Element);
-          // Wikipedia usually doesn't distinguish inline/display in the tag name itself easily, 
-          // but we can check for mwe-math-display class.
-          const isDisplay = (node as Element).classList.contains('mwe-math-display');
+          const isDisplay = (node as Element).classList.contains('mwe-math-display') || 
+                           (node as Element).closest('.mwe-math-element[display]') !== null;
           if (latex) {
             return isDisplay ? `\n\n$$\n${latex}\n$$\n\n` : ` $${latex}$ `;
           }

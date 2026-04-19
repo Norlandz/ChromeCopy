@@ -11,67 +11,62 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
   }
 
 
+  public static promotePToDiv(p: HTMLParagraphElement): HTMLDivElement {
+    const div = p.ownerDocument.createElement('div');
+    Array.from(p.attributes).forEach(attr => div.setAttribute(attr.name, attr.value));
+    div.append(...Array.from(p.childNodes));
+    p.replaceWith(div);
+    return div;
+  }
+
   public preprocess(fragment: DocumentFragment): void {
-    // 1. Strip the custom wrapper tags
     DomProcessor.flattenCustomWrappers(fragment, ['ms-cmark-node']);
 
-    // 2. Structural Re-stitching: Fix the "Shadow DOM Sibling" bug
-    const paragraphs = fragment.querySelectorAll('p');
-    paragraphs.forEach(p => {
-      const next = p.nextElementSibling;
-      if (next && (next.tagName === 'PRE' || next.tagName === 'DIV')) {
-         const hasMath = next.querySelector('annotation[encoding="application/x-tex"], script[type^="math/tex"]');
-         if (hasMath) {
-            p.append(...Array.from(next.childNodes));
-            next.remove();
-         }
-      }
-    });
-
-    // 3. Clean Marker Normalization
-    const walker = document.createTreeWalker(fragment, NodeFilter.SHOW_ELEMENT);
-    let node: Node | null = walker.nextNode();
-    const replacements: { oldNode: Node, newNode: Node }[] = [];
-
-    while (node) {
-      const el = node as HTMLElement;
-      if (el.nodeName.toLowerCase() === 'ms-katex') {
-        const type = el.classList.contains('display') || el.closest('.display') ? 'display' : 'inline';
-        const latex = LatexExtractor.extract(el);
-        
-        if (latex) {
-          const span = document.createElement('span');
-          span.setAttribute('data-chrome-copy-math', type);
-          span.setAttribute('data-latex', latex);
-          replacements.push({ oldNode: el, newNode: span });
+    // Fix orphaned siblings: move them back into the preceding container
+    // and ensure the container is a DIV.
+    const containers = Array.from(fragment.querySelectorAll('p, div'));
+    containers.forEach(container => {
+      const next = container.nextElementSibling;
+      if (next && (next.tagName === 'MS-KATEX' || next.tagName === 'PRE' || next.tagName === 'DIV')) {
+        const hasMath = next.tagName === 'MS-KATEX' || next.querySelector('ms-katex, .katex, annotation[encoding="application/x-tex"]');
+        if (hasMath) {
+          container.appendChild(next);
         }
       }
-      node = walker.nextNode();
-    }
-
-    replacements.forEach(({ oldNode, newNode }) => (oldNode as HTMLElement).replaceWith(newNode));
+      
+      if (container.tagName === 'P' && container.querySelector('ms-katex, .katex, pre')) {
+        GoogleAIStudioAdapter.promotePToDiv(container as HTMLParagraphElement);
+      }
+    });
   }
 
   public getRules(): TurndownService.Rule[] {
     return [
       {
+        // Robust Math Rule: Matches ms-katex AND its mangled siblings (PRE)
         filter: (node: Node) => {
           const el = node as Element;
-          return el.getAttribute?.('data-chrome-copy-math') === 'inline';
+          const tag = el.tagName.toLowerCase();
+          
+          if (tag === 'ms-katex') return true;
+          
+          // Mangled sibling case: ONLY match PRE if it is a pure math holder.
+          if (tag === 'pre') {
+            return !!el.querySelector('annotation[encoding="application/x-tex"], .katex-mathml');
+          }
+          
+          return false;
         },
         replacement: (content: string, node: Node) => {
-          const latex = (node as Element).getAttribute('data-latex');
-          return latex ? ` $${latex}$ ` : content;
-        }
-      },
-      {
-        filter: (node: Node) => {
           const el = node as Element;
-          return el.getAttribute?.('data-chrome-copy-math') === 'display';
-        },
-        replacement: (content: string, node: Node) => {
-          const latex = (node as Element).getAttribute('data-latex');
-          return latex ? `\n\n$$\n${latex}\n$$\n` : content;
+          const latex = LatexExtractor.extract(el);
+          if (!latex) return content;
+          
+          const isDisplay = el.classList.contains('display') || 
+                            el.closest('.display') !== null || 
+                            el.querySelector('.display') !== null;
+                            
+          return isDisplay ? `\n\n$$\n${latex}\n$$\n\n` : ` $${latex}$ `;
         }
       },
       {
