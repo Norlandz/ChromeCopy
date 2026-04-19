@@ -9,9 +9,9 @@ export class LatexExtractor {
   public static extract(node: Element): string | null {
     // Stage 1: Look for standard Katex annotation
     const annotation = node.querySelector('annotation[encoding="application/x-tex"]');
-    // Ensure we ONLY take the text content of the annotation element itself
     if (annotation) {
-      return annotation.textContent?.trim() || null;
+      const tex = annotation.textContent?.trim();
+      if (tex) return tex;
     }
 
     // Stage 2: Fallback to common math holders (legacy / other platforms)
