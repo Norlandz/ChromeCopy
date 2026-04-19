@@ -22,46 +22,35 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
   public preprocess(fragment: DocumentFragment): void {
     DomProcessor.flattenCustomWrappers(fragment, ['ms-cmark-node']);
 
-    // 2. Structural Re-stitching: Fix the "Shadow DOM Sibling" bug
-    // We greedily move all following siblings that are not "real" blocks back into the container.
-    // This handles cases where the browser pops math and punctuation out of a paragraph.
-    const containers = Array.from(fragment.querySelectorAll('p, div'));
-    containers.forEach(container => {
-      let next = container.nextElementSibling;
-      
-      while (next) {
-        const tag = next.tagName.toLowerCase();
-        const hasMath = next.querySelector('ms-katex, .katex, annotation[encoding="application/x-tex"]') !== null;
-        
-        // We stitch if it's a math holder, a fragmented tag (ng-star), OR just plain inline content (span/text)
-        // that belongs to this sentence. We stop at "hard" blocks like P, UL, LI, or another DIV.
-        const isInlineOrMangled = tag === 'ms-katex' || tag === 'pre' || tag === 'span' || tag === 'strong' || tag === 'em' || tag === 'code';
-        const isTextOnlyDiv = tag === 'div' && next.querySelectorAll('p, ul, li, div').length === 0;
-
-        if (hasMath || isInlineOrMangled || isTextOnlyDiv) {
-          const toMove = next;
-          next = next.nextElementSibling;
-          container.appendChild(toMove);
-        } else {
-          break;
-        }
-      }
-
-      // Promote P to DIV if it contains math or fragmented blocks to avoid further mangling
-      if (container.tagName === 'P' && (container.querySelector('ms-katex, .katex, pre') || container.childNodes.length > 5)) {
-        GoogleAIStudioAdapter.promotePToDiv(container as HTMLParagraphElement);
+    // 1. Structural Stability (P to DIV)
+    // Avoid browsers mangling <p> tags by ejecting block-level math nodes.
+    const paragraphs = Array.from(fragment.querySelectorAll('p'));
+    paragraphs.forEach(p => {
+      if (p.querySelector('ms-katex, .katex, pre, div[data-was-pre]')) {
+        GoogleAIStudioAdapter.promotePToDiv(p as HTMLParagraphElement);
       }
     });
 
-    // 3. Inline Normalization
-    // If we moved a PRE block into a container, normalize it to SPAN to treat it as inline.
-    const nestedPres = Array.from(fragment.querySelectorAll('div pre, p pre'));
-    nestedPres.forEach(pre => {
-      if (pre.querySelector('annotation, .katex-mathml')) {
+    // 2. Targeted Re-stitching
+    // Pull orphaned math siblings back into their preceding container.
+    const containers = Array.from(fragment.querySelectorAll('div, p'));
+    containers.forEach(container => {
+      let next = container.nextElementSibling;
+      while (next && (next.tagName === 'MS-KATEX' || next.tagName === 'PRE' || (next.tagName === 'DIV' && next.getAttribute('data-was-pre') === 'true'))) {
+         container.appendChild(next);
+         next = container.nextElementSibling;
+      }
+    });
+
+    // 3. Inline Normalization (The Line-Break Fix)
+    // Convert all math-holding block elements to SPANs to force Turndown into inline mode.
+    const mathBlocks = Array.from(fragment.querySelectorAll('pre, div[data-was-pre="true"], ms-katex'));
+    mathBlocks.forEach(block => {
+      if (block.querySelector('annotation, .katex-mathml')) {
         const span = fragment.ownerDocument.createElement('span');
-        Array.from(pre.attributes).forEach(attr => span.setAttribute(attr.name, attr.value));
-        span.append(...Array.from(pre.childNodes));
-        pre.replaceWith(span);
+        Array.from(block.attributes).forEach(attr => span.setAttribute(attr.name, attr.value));
+        span.append(...Array.from(block.childNodes));
+        block.replaceWith(span);
       }
     });
   }
@@ -69,19 +58,16 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
   public getRules(): TurndownService.Rule[] {
     return [
       {
-        // Robust Math Rule: Matches ms-katex AND its mangled/normalized siblings (PRE or SPAN)
+        // High-fidelity Math Rule
         filter: (node: Node) => {
           const el = node as Element;
           const tag = el.tagName.toLowerCase();
           
-          if (tag === 'ms-katex') return true;
-          
-          // Match mangled holders (PRE) or normalized holders (SPAN) that contain math metadata
-          if (tag === 'pre' || tag === 'span') {
-            return !!el.querySelector('annotation[encoding="application/x-tex"], .katex-mathml');
-          }
-          
-          return false;
+          // Match our normalized spans or the original tags if they escaped normalization
+          return tag === 'ms-katex' || 
+                 tag === 'pre' || 
+                 (tag === 'div' && el.getAttribute('data-was-pre') === 'true') ||
+                 (tag === 'span' && el.querySelector('annotation, .katex-mathml') !== null);
         },
         replacement: (content: string, node: Node) => {
           const el = node as Element;
@@ -90,7 +76,7 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
           
           const isDisplay = el.classList.contains('display') || 
                             el.closest('.display') !== null || 
-                            el.querySelector('.display') !== null;
+                            el.querySelector('.katex-display') !== null;
                             
           return isDisplay ? `\n\n$$\n${latex}\n$$\n\n` : ` $${latex}$ `;
         }
