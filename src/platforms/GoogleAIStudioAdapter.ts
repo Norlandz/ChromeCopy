@@ -27,18 +27,20 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
         let curr = source.parentNode;
         while (curr && fragment.contains(curr)) {
           const name = curr.nodeName.toLowerCase();
-          // If we hit a structural block that isn't JUST math, we stop.
           if (name === 'p' || name === 'li' || name === 'ul' || name === 'ol' || name === 'body' || name === 'div') break;
-          // If we hit ms-katex or a code wrapper for the math, it's our new target
           if (name === 'ms-katex' || name === 'pre' || name === 'code' || (curr as Element).classList.contains('katex')) {
              targetToReplace = curr;
           }
           curr = curr.parentNode;
         }
 
-        const isDisplay = (targetToReplace as Element).classList?.contains('display') || 
-                          (targetToReplace as Element).querySelector?.('.katex-display') !== null ||
-                          targetToReplace.nodeName.toLowerCase() === 'pre';
+        // --- SURGICAL DISPLAY DETECTION ---
+        // 1. Check for explicit display="block" attribute on the math tag
+        // 2. Check for .katex-display class
+        const mathEl = (source.nodeName.toLowerCase() === 'math') ? source as Element : source.querySelector('math');
+        const isDisplay = (mathEl?.getAttribute('display') === 'block') || 
+                          (targetToReplace as Element).classList?.contains('display') || 
+                          (targetToReplace as Element).querySelector?.('.katex-display') !== null;
 
         const wrapper = doc.createElement('latex-js');
         wrapper.textContent = latex;
