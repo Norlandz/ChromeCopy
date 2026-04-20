@@ -22,7 +22,7 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
       const latex = LatexExtractor.extract(source as Element);
       if (latex) {
         let targetToReplace: Node = source;
-        let curr = source.parentNode;
+        let curr: ParentNode | null = source.parentNode;
         while (curr && fragment.contains(curr)) {
           const name = curr.nodeName.toLowerCase();
           if (['p', 'li', 'ul', 'ol', 'body', 'div', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(name)) break;

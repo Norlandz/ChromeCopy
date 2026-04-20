@@ -1,4 +1,4 @@
-import TurndownService from 'turndown';
+import TurndownService, { type TagName } from 'turndown';
 // @ts-ignore
 import * as turndownPluginGfm from '@guyplusplus/turndown-plugin-gfm';
 import { DomProcessor } from './DomProcessor';
@@ -27,7 +27,7 @@ export interface IPlatformAdapter {
   matches(url: string): boolean;
   preprocess(fragment: DocumentFragment): void;
   getRules(): TurndownService.Rule[];
-  getTagsToKeep?(): string[];
+  getTagsToKeep?(): TagName[];
 }
 
 export class MarkdownConverter {
