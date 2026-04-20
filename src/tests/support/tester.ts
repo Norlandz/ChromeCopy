@@ -12,8 +12,13 @@ export function run_conversion(html: string, adapter: IPlatformAdapter, url: str
   const converter = new MarkdownConverter();
   converter.registerAdapter(adapter);
 
+  // [NUCLEAR STRING SWAP]
+  // Turn P into DIV before parsing to prevent JSDOM from auto-closing paragraphs
+  // that contain block-level math elements.
+  const safeHtml = html.replace(/<p\b/g, '<div data-is-p="true"').replace(/<\/p>/g, '</div>');
+
   // Use a completely fresh JSDOM instance for the input to avoid tag-stripping
-  const dom = new JSDOM(html);
+  const dom = new JSDOM(safeHtml);
   const body = dom.window.document.body;
   
   // Convert body content to a fragment
