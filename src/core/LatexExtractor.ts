@@ -1,3 +1,5 @@
+import { Logger } from './Logger';
+
 /**
  * Centralized logic for extracting raw LaTeX source from various
  * browser-rendered math formats (KaTeX, MathML, MathJax).
@@ -37,7 +39,7 @@ export class LatexExtractor {
       for (const child of children) {
         const found = findSource(child);
         if (found) {
-          console.log(`[LATEX-EXTRACTOR] Found: "${found}"`);
+          Logger.debug(`[LATEX-EXTRACTOR] Found: "${found}"`);
           return found;
         }
       }

@@ -1,18 +1,19 @@
+import { Logger } from './core/Logger';
+
 // https://dev.to/paulasantamaria/adding-shortcuts-to-your-chrome-extension-2i20
 chrome.commands.onCommand.addListener((command, tab) => {
-  console.debug(command);
-  if (command === 'copyHtml') {
-  } else if (command === 'copyMarkdown') {
-  } else if (command === 'copyPlainText') {
-  } else {
-    console.error(`Command ${command} not found`);
-    return;
-  }
+  Logger.info(`Command received: ${command}`);
 
-  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-    const id = tabs[0].id ?? (() => { throw new Error(); })(); // prettier-ignore
-    const _ = await chrome.tabs.sendMessage(id, { command });
-  });
+  if (command === 'copyHtml' || command === 'copyMarkdown' || command === 'copyPlainText') {
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+      if (tabs[0]?.id) {
+        await chrome.tabs.sendMessage(tabs[0].id, { command });
+        Logger.debug(`Message sent to tab ${tabs[0].id}: ${command}`);
+      }
+    });
+  } else {
+    Logger.error(`Command ${command} not found`);
+  }
 });
 
 // ;@pb[import cause background.js not working]; import 'chrome-types';

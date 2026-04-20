@@ -22,10 +22,17 @@ function getSelectionIncludingIframe(): Selection | null {
   return selection;
 }
 
+import { Logger } from './core/Logger';
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   void (async () => {
     const selection = getSelectionIncludingIframe();
-    if (!selection) return;
+    if (!selection) {
+      Logger.warn('No selection found');
+      return;
+    }
+
+    Logger.info(`Handling command: ${message.command}`);
 
     if (message.command === 'copyMarkdown') {
       const range = selection.getRangeAt(0);
@@ -41,23 +48,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           printWidth: 100,
         });
       } catch (e) {
-        console.warn('Prettier formatting failed, returning raw markdown', e);
+        Logger.warn('Prettier formatting failed, returning raw markdown', e);
       }
 
       await navigator.clipboard.writeText(markdown);
-      console.log('Markdown copied to clipboard');
+      Logger.info('Markdown copied to clipboard');
     } else if (message.command === 'copyHtml') {
       const range = selection.getRangeAt(0);
       const container = document.createElement('div');
       container.appendChild(range.cloneContents());
+      
+      const html = container.innerHTML;
       await navigator.clipboard.write([
         new ClipboardItem({
-          'text/html': new Blob([container.innerHTML], { type: 'text/html' }),
-          'text/plain': new Blob([selection.toString()], { type: 'text/plain' }),
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([html], { type: 'text/plain' }), // Legacy: Use raw HTML for plain text slot
         })
       ]);
+      Logger.info('HTML copied to clipboard (with raw HTML fallback)');
     } else if (message.command === 'copyPlainText') {
       await navigator.clipboard.writeText(selection.toString());
+      Logger.info('Plain text copied to clipboard');
     }
   })();
   return undefined;
