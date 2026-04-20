@@ -2,9 +2,7 @@ import { MarkdownConverter } from './core/MarkdownConverter';
 import { GoogleAIStudioAdapter } from './platforms/GoogleAIStudioAdapter';
 import { WikipediaAdapter } from './platforms/WikipediaAdapter';
 import { StackExchangeAdapter } from './platforms/StackExchangeAdapter';
-import prettier from 'prettier';
-// @ts-ignore
-import parserMarkdown from 'prettier/plugins/markdown';
+import { MarkdownFormatter } from './core/MarkdownFormatter';
 
 const converter = new MarkdownConverter();
 converter.registerAdapter(new GoogleAIStudioAdapter());
@@ -40,16 +38,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       
       let markdown = converter.convert(fragment, window.location.href);
 
-      // Apply prettier formatting for professional output
-      try {
-        markdown = await prettier.format(markdown, {
-          parser: 'markdown',
-          plugins: [parserMarkdown],
-          printWidth: 100,
-        });
-      } catch (e) {
-        Logger.warn('Prettier formatting failed, returning raw markdown', e);
-      }
+      // Apply professional formatting via dedicated service
+      markdown = await MarkdownFormatter.format(markdown);
 
       await navigator.clipboard.writeText(markdown);
       Logger.info('Markdown copied to clipboard');

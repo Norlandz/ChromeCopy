@@ -15,9 +15,12 @@ const html = String.raw`<ul _ngcontent-ng-c2294188212="" class="ng-star-inserted
       </div></ms-katex><span _ngcontent-ng-c2294188212="" class="ng-star-inserted">.</span></ms-cmark-node></p></ms-cmark-node></li><li _ngcontent-ng-c2294188212="" class="ng-star-inserted"><ms-cmark-node _ngcontent-ng-c2294188212="" _nghost-ng-c2294188212=""><p _ngcontent-ng-c2294188212="" class="ng-star-inserted"><ms-cmark-node _ngcontent-ng-c2294188212="" _nghost-ng-c2294188212=""><i _ngcontent-ng-c2294188212="" style="font-style: italic;" class="ng-star-inserted"><ms-cmark-node _ngcontent-ng-c2294188212="" _nghost-ng-c2294188212=""><span _ngcontent-ng-c2294188212="" class="ng-star-inserted">Note:</span></ms-cmark-node></i><span _ngcontent-ng-c2294188212="" class="ng-star-inserted"> In a real implementation, these three are calculated as one large matrix </span></ms-cmark-node></p></ms-cmark-node></li></ul>
   `.trim();
 
+import { MarkdownFormatter } from '../../core/MarkdownFormatter';
+
 const adapter = new GoogleAIStudioAdapter();
 const url = 'https://aistudio.google.com/';
 
-const markdown = run_conversion(html, adapter, url);
+const rawMarkdown = run_conversion(html, adapter, url);
+const formattedMarkdown = await MarkdownFormatter.format(rawMarkdown);
 
-console.log(markdown);
+console.log(formattedMarkdown);

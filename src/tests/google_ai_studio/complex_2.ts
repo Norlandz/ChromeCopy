@@ -11,9 +11,12 @@ const __dirname = path.dirname(__filename);
 const htmlPath = path.join(__dirname, 'complex_2.html');
 const html = fs.readFileSync(htmlPath, 'utf8');
 
+import { MarkdownFormatter } from '../../core/MarkdownFormatter';
+
 const adapter = new GoogleAIStudioAdapter();
 const url = 'https://aistudio.google.com/'; 
 
-const markdown = run_conversion(html, adapter, url);
+const rawMarkdown = run_conversion(html, adapter, url);
+const formattedMarkdown = await MarkdownFormatter.format(rawMarkdown);
 
-console.log(markdown);
+console.log(formattedMarkdown);
