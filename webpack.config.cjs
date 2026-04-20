@@ -14,8 +14,8 @@ module.exports = {
   //   path: path.resolve(__dirname, 'dist'),
   // },
   entry: {
-    background: './src/background/background.ts',
-    contentScript: './src/contentScript/contentScript.ts',
+    background: './src/background.ts',
+    contentScript: './src/contentScript.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -26,7 +26,10 @@ module.exports = {
       {
         test: /\.tsx?$/,
         use: 'ts-loader',
-        exclude: /node_modules/,
+        exclude: [
+          /node_modules/,
+          // /src\/tests/,
+        ],
       },
     ],
   },

@@ -5,6 +5,7 @@
   "type": "module",
   "// main": "build_HighlightTypeset_ReadHtse__Cev.js",
   "scripts": {
+    "//": "pnpm run build:webpack",
     "build:webpack": "webpack --config ./webpack.config.cjs",
     "build:ts": "tsc --project ./tsconfig.json"
   },
