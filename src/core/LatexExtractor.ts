@@ -7,34 +7,45 @@ export class LatexExtractor {
    * Attempts to extract LaTeX source from a given element.
    */
   public static extract(node: Element): string | null {
-    // Stage 1: Look for standard Katex annotation
-    const annotation = node.querySelector('annotation[encoding="application/x-tex"]');
-    if (annotation) {
-      const tex = annotation.textContent?.trim();
-      if (tex) return tex;
-    }
+    // Stage 1: Deep Recursive Search (The most robust method)
+    const findSource = (root: Node): string | null => {
+      if (root.nodeType === 3) return null;
+      const el = root as Element;
 
-    // Stage 2: Fallback to common math holders (legacy / other platforms)
-    const scriptMath = node.querySelector('script[type^="math/tex"]');
-    if (scriptMath) {
-      return scriptMath.textContent?.trim() || null;
-    }
+      // Check 1: Standard Katex Annotation
+      if (el.tagName.toLowerCase() === 'annotation' && el.getAttribute('encoding') === 'application/x-tex') {
+        const tex = el.textContent?.trim();
+        if (tex) return tex;
+      }
 
-    // Stage 3: Check for data-tex attribute (Used by Zhihu and some custom implementations)
-    // First check the node itself, then children
-    const dataTex = node.getAttribute('data-tex') || node.querySelector('[data-tex]')?.getAttribute('data-tex');
-    if (dataTex) {
-      return dataTex.trim();
-    }
+      // Check 2: script math
+      if (el.tagName.toLowerCase() === 'script' && el.getAttribute('type')?.startsWith('math/tex')) {
+        return el.textContent?.trim() || null;
+      }
 
-    // Stage 4: Check for Alt text (Wikipedia fallback)
-    const mathImg = node.querySelector('img.mwe-math-fallback-image-inline, img.mwe-math-fallback-image-display');
-    if (mathImg) {
-      const alt = mathImg.getAttribute('alt');
-      if (alt) return alt.trim();
-    }
+      // Check 3: data-tex attribute
+      const dataTex = el.getAttribute('data-tex');
+      if (dataTex) return dataTex.trim();
 
-    return null;
+      // Check 4: MathImg alt text
+      if (el.tagName.toLowerCase() === 'img' && (el.classList.contains('mwe-math-fallback-image-inline') || el.classList.contains('mwe-math-fallback-image-display'))) {
+        return el.getAttribute('alt')?.trim() || null;
+      }
+
+      // Descend
+      const children = Array.from(root.childNodes);
+      for (const child of children) {
+        const found = findSource(child);
+        if (found) {
+          console.log(`[LATEX-EXTRACTOR] Found: "${found}"`);
+          return found;
+        }
+      }
+
+      return null;
+    };
+
+    return findSource(node);
   }
 
   /**

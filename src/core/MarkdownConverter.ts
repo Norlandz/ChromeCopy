@@ -52,6 +52,8 @@ export class MarkdownConverter {
     // Global Recovery: Restore legacy PRE block rules
     this.turndownService.addRule('pre_block', {
       filter: (node, options) => {
+        // [CRITICAL] Do not process PRE if it is part of a math block
+        if ((node as Element).closest('ms-katex, .katex, math')) return false;
         return !!(options.codeBlockStyle === 'fenced' && node.nodeName === 'PRE' && node.firstElementChild && node.firstElementChild.nodeName !== 'CODE');
       },
       replacement: (content, node) => {
@@ -61,6 +63,8 @@ export class MarkdownConverter {
 
     this.turndownService.addRule('preCodeBlock', {
       filter: (node, options) => {
+        // [CRITICAL] Do not process PRE if it is part of a math block
+        if ((node as Element).closest('ms-katex, .katex, math')) return false;
         return !!(options.codeBlockStyle === 'fenced' && node.nodeName === 'PRE' && node.firstElementChild && node.firstElementChild.nodeName === 'CODE');
       },
       replacement: (content, node, options) => {
@@ -98,19 +102,29 @@ export class MarkdownConverter {
     DomProcessor.trimStructure(fragment);
 
     // 2. Platform-specific Pre-processing
-    activeAdapters.forEach(a => a.preprocess(fragment));
+    activeAdapters.forEach(a => {
+      a.preprocess(fragment);
+      if (a.getTagsToKeep) {
+        this.turndownService.keep(a.getTagsToKeep());
+      }
+    });
 
     // 3. Convert to HTML string for Turndown (ensuring it's treated as a block/fragment correctly)
     const container = document.createElement('div');
     container.appendChild(fragment.cloneNode(true));
     
-    // console.log('CONTAINER HTML:', container.innerHTML);
+    console.log('--- DEBUG: CLEANED HTML BEFORE TURNDOWN ---');
+    console.log(container.innerHTML);
+    console.log('-------------------------------------------');
 
     // 4. Conversion - Pass the Node directly to preserve custom element tagging
     let markdown = this.turndownService.turndown(container);
 
     // 5. Post-Conversion Cleanup
     markdown = markdown.replace(/【CC_BULLET】/g, '-');
+    
+    // Final Scrub: Remove internal structural markers (like [rf-rgi-cb...])
+    markdown = markdown.replace(/\[rf-rgi-cb\[.*?\]rf-rgi-cb\]/g, '');
 
     return markdown.trim();
   }

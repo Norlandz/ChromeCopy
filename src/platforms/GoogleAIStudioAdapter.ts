@@ -11,131 +11,105 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
   }
 
   public preprocess(fragment: DocumentFragment): void {
-    // 1. Initial cleanup of custom wrapper nodes
-    DomProcessor.flattenCustomWrappers(fragment, ['ms-cmark-node']);
+    const doc = fragment.ownerDocument;
 
-    // 2. Targeted Visual Purge
-    const junkSelectors = [
+    // 1. [SURGICAL SHIELDING] Find and replace the HIGHEST math container
+    // This targets the container (ms-katex) or the wrapper (pre/code) if it contains math.
+    const mathSources = Array.from(fragment.querySelectorAll('ms-katex, math, .katex'));
+    
+    mathSources.forEach(source => {
+      if (!source.parentNode || !fragment.contains(source)) return;
+
+      const latex = LatexExtractor.extract(source as Element);
+      if (latex) {
+        // Find the absolute highest math-related ancestor we should replace
+        let targetToReplace: Node = source;
+        let curr = source.parentNode;
+        while (curr && fragment.contains(curr)) {
+          const name = curr.nodeName.toLowerCase();
+          // If we hit a structural block that isn't JUST math, we stop.
+          if (name === 'p' || name === 'li' || name === 'ul' || name === 'ol' || name === 'body' || name === 'div') break;
+          // If we hit ms-katex or a code wrapper for the math, it's our new target
+          if (name === 'ms-katex' || name === 'pre' || name === 'code' || (curr as Element).classList.contains('katex')) {
+             targetToReplace = curr;
+          }
+          curr = curr.parentNode;
+        }
+
+        const isDisplay = (targetToReplace as Element).classList?.contains('display') || 
+                          (targetToReplace as Element).querySelector?.('.katex-display') !== null ||
+                          targetToReplace.nodeName.toLowerCase() === 'pre';
+
+        const wrapper = doc.createElement('latex-js');
+        wrapper.textContent = latex;
+        if (isDisplay) wrapper.setAttribute('data-display', 'true');
+        
+        // VAPORIZE the whole container (including ghosts inside it)
+        if (targetToReplace.parentNode) {
+          targetToReplace.parentNode.replaceChild(wrapper, targetToReplace);
+        }
+      }
+    });
+
+    // 2. [GLOBAL PURGE] Kill all remaining Katex/Google artifacts
+    const toWipe = [
       '.katex-html', 
       '.katex-mathml', 
-      'span[class*="rf-rgi-cb"]', 
-      'span[id*="zva"]',
-      'button',
-      'ms-tooltip'
+      'annotation', 
+      'semantics', 
+      'button', 
+      'ms-tooltip', 
+      'ms-katex', // Kill orphans
+      'svg',
+      '[class*="ng-content"]',
+      'span[id*="zva"]'
     ];
-    junkSelectors.forEach(sel => {
-      const junk = Array.from(fragment.querySelectorAll(sel));
-      junk.forEach(j => j.remove());
+    
+    toWipe.forEach(sel => {
+      fragment.querySelectorAll(sel).forEach(el => el.remove());
     });
 
-    // 3. Surgical Re-stitching (Shadow DOM ejection fix)
-    const blockStoppers = ['UL', 'OL', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HR', 'BLOCKQUOTE', 'TABLE', 'LI', 'PRE'];
-    const nodes = Array.from(fragment.childNodes);
-    nodes.forEach(node => {
-      if (node.nodeType === 1 && node.nodeName === 'P') {
-        const p = node as Element;
-        let next = p.nextSibling;
-        while (next) {
-          if (next.nodeType === 3) {
-            p.appendChild(next);
-          } else if (next.nodeType === 1) {
-            const el = next as Element;
-            if (blockStoppers.includes(el.tagName)) break;
-            if (el.tagName === 'P') {
-              while (el.firstChild) p.appendChild(el.firstChild);
-              el.remove();
-            } else {
-              p.appendChild(el);
-            }
-          } else {
-            p.appendChild(next);
-          }
-          next = p.nextSibling;
-        }
-      }
-    });
-
-    // 3. Precision Math Normalization (Protected Token Strategy)
-    const mathNodes = Array.from(fragment.querySelectorAll('ms-katex, div[data-was-pre="true"], pre.display'));
-    mathNodes.forEach(node => {
-      const source = node.querySelector('annotation[encoding="application/x-tex"], script[type^="math/tex"]');
-      const latex = source?.textContent?.trim() || '';
-      if (!latex) return;
-
-      const isDisplay = node.classList.contains('display') || 
-                        node.getAttribute('class')?.includes('display') ||
-                        node.querySelector('.katex-display') !== null ||
-                        node.tagName === 'PRE';
-
-      // Use CODE tag to protect content from Turndown escaping
-      const holder = fragment.ownerDocument.createElement('code');
-      holder.className = 'chrome-copy-math-holder';
-      if (isDisplay) holder.classList.add('display');
-      holder.textContent = `@@CHROME_MATH@@${latex}@@`;
+    // 3. [STRUCTURAL FLATTENING] Flatten everything except safe blocks and our tag
+    const toFlatten = Array.from(fragment.querySelectorAll('ms-cmark-node, span, div, pre, code'));
+    toFlatten.forEach(node => {
+      if (node.tagName.toLowerCase() === 'latex-js') return;
       
-      if (node.parentNode) {
-        node.parentNode.replaceChild(holder, node);
+      // If it's a code block that DOES NOT contain math, keep it (handled by standard rules)
+      if (node.tagName.toLowerCase() === 'pre' && node.querySelector('code')) return;
+
+      const parent = node.parentNode;
+      if (!parent) return;
+      while (node.firstChild) {
+        parent.insertBefore(node.firstChild, node);
       }
+      parent.removeChild(node);
     });
 
-    // 4. Total Structural Flattening (Kill all intermediate spans)
-    DomProcessor.flattenCustomWrappers(fragment, ['ms-katex', 'ms-cmark-node', 'span']);
-
-    // 5. Final Sentence Normalization
+    // 4. [NORMALIZATION] 
     const allPs = Array.from(fragment.querySelectorAll('p'));
     allPs.forEach(p => {
-      // 5a. Mask Bullet Markers to stop Turndown list-item logic
       if (p.firstChild?.nodeType === 3) {
         const text = p.firstChild.textContent || '';
-        if (text.startsWith('- ')) {
-          p.firstChild.textContent = text.replace(/^- /, '【CC_BULLET】 ');
-        }
-      }
-
-      // 5b. Whitespace Normalization (inside P only)
-      const walker = fragment.ownerDocument.createTreeWalker(p, 4); // SHOW_TEXT
-      let tNode: Node | null;
-      while (tNode = walker.nextNode()) {
-        const text = tNode.textContent || '';
-        // Skip math placeholders
-        if (text.includes('@@CHROME_MATH@@')) continue;
-        tNode.textContent = text.replace(/[\n\r\t]+/g, ' ');
+        if (text.startsWith('- ')) p.firstChild.textContent = text.replace(/^- /, '【CC_BULLET】 ');
       }
       p.normalize();
-
-      // 5c. Trim boundaries
-      if (p.lastChild?.nodeType === 3) p.lastChild.textContent = p.lastChild.textContent?.trimEnd() || '';
-      if (p.firstChild?.nodeType === 3) p.firstChild.textContent = p.firstChild.textContent?.trimStart() || '';
-      
-      if (!p.textContent?.trim() && !p.querySelector('.chrome-copy-math-holder, img')) {
-        p.remove();
-      }
+      if (!p.textContent?.trim() && !p.querySelector('latex-js, img')) p.remove();
     });
+  }
+
+  public getTagsToKeep(): string[] {
+    return ['latex-js'];
   }
 
   public getRules(): TurndownService.Rule[] {
     return [
       {
-        filter: (node: Node) => {
-          return (node as Element).classList?.contains('chrome-copy-math-holder');
-        },
+        filter: (node: Node) => node.nodeName.toLowerCase() === 'latex-js',
         replacement: (content: string, node: Node) => {
           const el = node as Element;
-          // Extract latex from the protected token
-          const match = content.match(/@@CHROME_MATH@@([\s\S]*?)@@/);
-          const latex = match ? match[1] : content.trim();
-          if (!latex) return '';
-          
-          const isDisplay = el.classList.contains('display');
-          return isDisplay ? `\n\n$$\n${latex}\n$$\n\n` : `$${latex}$`;
-        }
-      },
-      {
-        filter: (node: Node) => {
-          return node.nodeName.toLowerCase() === 'span' && (node as Element).classList.contains('inline-code');
-        },
-        replacement: (content: string) => {
-          return `\`${content.trim()}\``;
+          const latex = el.textContent || '';
+          const isDisplay = el.getAttribute('data-display') === 'true';
+          return isDisplay ? `\n\n$$\n${latex}\n$$\n\n` : ` $${latex.trim()}$ `;
         }
       }
     ];

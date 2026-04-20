@@ -1,3 +1,4 @@
+import { JSDOM } from 'jsdom';
 import './env';
 import { MarkdownConverter, IPlatformAdapter } from '../../core/MarkdownConverter';
 
@@ -11,15 +12,16 @@ export function run_conversion(html: string, adapter: IPlatformAdapter, url: str
   const converter = new MarkdownConverter();
   converter.registerAdapter(adapter);
 
-  // 1. Create fragment in the global JSDOM document
-  const div = document.createElement('div');
-  div.innerHTML = html.trim();
+  // Use a completely fresh JSDOM instance for the input to avoid tag-stripping
+  const dom = new JSDOM(html);
+  const body = dom.window.document.body;
   
-  const fragment = document.createDocumentFragment();
-  while (div.firstChild) {
-    fragment.appendChild(div.firstChild);
+  // Convert body content to a fragment
+  const fragment = dom.window.document.createDocumentFragment();
+  while (body.firstChild) {
+    fragment.appendChild(body.firstChild);
   }
 
-  // 2. Execute conversion
+  // Execute conversion
   return converter.convert(fragment, url);
 }
