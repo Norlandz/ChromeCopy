@@ -2,7 +2,6 @@ import TurndownService from 'turndown';
 // @ts-ignore
 import * as turndownPluginGfm from '@guyplusplus/turndown-plugin-gfm';
 import { DomProcessor } from './DomProcessor';
-import { regex_indicator } from './regex_indicator';
 
 const gfm = turndownPluginGfm.gfm;
 
@@ -83,7 +82,7 @@ export class MarkdownConverter {
           }
         }
         const fence = Array(fenceSize + 1).join(fenceChar);
-        return regex_indicator.code_block_beginning + '\n\n' + fence + language + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n';
+        return '\n\n' + fence + language + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n';
       },
     });
   }
@@ -109,7 +108,7 @@ export class MarkdownConverter {
       }
     });
 
-    // 3. Convert to HTML string for Turndown (ensuring it's treated as a block/fragment correctly)
+    // 3. Convert to HTML string for Turndown
     const container = document.createElement('div');
     container.appendChild(fragment.cloneNode(true));
     
@@ -121,10 +120,7 @@ export class MarkdownConverter {
     let markdown = this.turndownService.turndown(container);
 
     // 5. Post-Conversion Cleanup
-    markdown = markdown.replace(/【CC_BULLET】/g, '-');
-    
-    // Final Scrub: Remove internal structural markers (like [rf-rgi-cb...])
-    markdown = markdown.replace(/\[rf-rgi-cb\[.*?\]rf-rgi-cb\]/g, '');
+    // (Removed legacy regex scrubbing of RF-RGI-CB and CC_BULLET markers)
 
     return markdown.trim();
   }

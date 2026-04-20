@@ -11,3 +11,7 @@
    - (you can skip this step, if `ChromeCopy/dist/` folder is already provided (/generated) in the source code folder)
 3. open Chrome browser > `chrome://extensions/` > `load unpacked` > select `ChromeCopy/`
 4. press hotkey to copy text in webpage in desired format
+
+### what it does
+supports latex copying.
+supports google ai studio markdown.

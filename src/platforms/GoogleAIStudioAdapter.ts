@@ -73,7 +73,7 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
       }
 
       // CASE B: Safe Structural Tags
-      const safeTags = ['p', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'hr', 'blockquote', 'img'];
+      const safeTags = ['p', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'hr', 'blockquote', 'img', 'pre', 'code'];
       const isPseudoP = tagName === 'div' && el.getAttribute('data-is-p') === 'true';
       
       if (safeTags.includes(tagName) || isPseudoP) {
@@ -85,8 +85,8 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
         return;
       }
 
-      // CASE C: Flatten Wrappers
-      if (['span', 'ms-cmark-node', 'div', 'pre', 'code'].includes(tagName)) {
+      // CASE C: Flatten Wrappers (Removed 'pre' and 'code' from here)
+      if (['span', 'ms-cmark-node', 'div'].includes(tagName)) {
         Array.from(el.childNodes).forEach(child => processNode(child, target));
       }
     };
@@ -115,7 +115,8 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
           const el = node as Element;
           const latex = el.textContent || '';
           const isDisplay = el.getAttribute('data-display') === 'true';
-          return isDisplay ? `\n\n$$\n${latex.trim()}\n$$\n\n` : `$${latex.trim()}$`;
+          // Clean Rule: No manual \n\n hacks. Fences are enough for block identification.
+          return isDisplay ? `\n$$\n${latex.trim()}\n$$\n` : `$${latex.trim()}$`;
         }
       }
     ];
