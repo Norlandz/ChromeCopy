@@ -8,7 +8,8 @@ import { GoogleAIStudioAdapter } from '../../platforms/GoogleAIStudioAdapter';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const htmlPath = path.join(__dirname, 'complex_2.html');
+// const htmlPath = path.join(__dirname, 'main_test/complex_2.html');
+const htmlPath = path.join(__dirname, 'main_test/complex_3.html');
 const html = fs.readFileSync(htmlPath, 'utf8');
 
 import { MarkdownFormatter } from '../../core/MarkdownFormatter';

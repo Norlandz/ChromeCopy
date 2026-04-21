@@ -25,7 +25,7 @@ export class MarkdownFormatter {
       result = await prettier.format(result, {
         parser: 'markdown',
         plugins: [parserMarkdown],
-        printWidth: 100,
+        printWidth: 5000,
         proseWrap: 'always',
       });
     } catch (e) {
