@@ -1,5 +1,5 @@
-import { run_conversion } from '../support/tester';
-import { GoogleAIStudioAdapter } from '../../platforms/GoogleAIStudioAdapter';
+import { run_conversion } from '@/tests/support/tester';
+import { GoogleAIStudioAdapter } from '@/platforms/GoogleAIStudioAdapter';
 
 /**
  * TEST CASE: BOLD WRAPPED MATH
