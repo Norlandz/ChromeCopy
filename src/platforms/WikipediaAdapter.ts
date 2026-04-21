@@ -17,14 +17,17 @@ export class WikipediaAdapter implements IPlatformAdapter {
     return [
       {
         filter: (node: Node) => {
-          const el = node as Element;
+          if (!(node instanceof Element)) return false;
+          const el = node;
           // Wikipedia uses mwe-math-element classes
-          return el.classList?.contains('mwe-math-element') || el.classList?.contains('mwe-math-fallback-image-inline');
+          return el.classList.contains('mwe-math-element') || el.classList.contains('mwe-math-fallback-image-inline');
         },
         replacement: (content: string, node: Node) => {
-          const latex = LatexExtractor.extract(node as Element);
-          const isDisplay = (node as Element).classList.contains('mwe-math-display') || 
-                           (node as Element).closest('.mwe-math-element[display]') !== null;
+          if (!(node instanceof Element)) return content;
+          const el = node;
+          const latex = LatexExtractor.extract(el);
+          const isDisplay = el.classList.contains('mwe-math-display') || 
+                           el.closest('.mwe-math-element[display]') !== null;
           if (latex) {
             return isDisplay ? `\n\n$$\n${latex}\n$$\n\n` : ` $${latex}$ `;
           }

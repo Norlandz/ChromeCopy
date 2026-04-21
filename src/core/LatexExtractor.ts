@@ -11,8 +11,8 @@ export class LatexExtractor {
   public static extract(node: Element): string | null {
     // Stage 1: Deep Recursive Search (The most robust method)
     const findSource = (root: Node): string | null => {
-      if (root.nodeType === 3) return null;
-      const el = root as Element;
+      if (!(root instanceof Element)) return null;
+      const el = root;
 
       // Check 1: Standard Katex Annotation
       if (el.tagName.toLowerCase() === 'annotation' && el.getAttribute('encoding') === 'application/x-tex') {
@@ -54,8 +54,8 @@ export class LatexExtractor {
    * Determines if an element represents a LaTeX math block.
    */
   public static isMathNode(node: Node): node is Element {
-    if (node.nodeType !== Node.ELEMENT_NODE) return false;
-    const el = node as Element;
+    if (!(node instanceof Element)) return false;
+    const el = node;
     const tag = el.tagName.toLowerCase();
     
     return (

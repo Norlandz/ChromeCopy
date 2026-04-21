@@ -51,6 +51,6 @@ export class DomProcessor {
       }
       node = walker.nextNode();
     }
-    nodesToRemove.forEach(n => (n as Element).remove());
+    nodesToRemove.forEach(n => n.parentNode?.removeChild(n));
   }
 }

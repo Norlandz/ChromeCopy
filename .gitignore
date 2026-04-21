@@ -5,3 +5,5 @@
 # _usp_nt/
 # usp_nt/
 *.nttc
+
+/.agents/
