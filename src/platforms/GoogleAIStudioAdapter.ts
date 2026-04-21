@@ -73,7 +73,7 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
       }
 
       // CASE B: Safe Structural Tags
-      const safeTags = ['p', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'hr', 'blockquote', 'img', 'pre', 'code'];
+      const safeTags = ['p', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'hr', 'blockquote', 'img', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td'];
       const isPseudoP = tagName === 'div' && el.getAttribute('data-is-p') === 'true';
       
       if (safeTags.includes(tagName) || isPseudoP) {
@@ -85,10 +85,9 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
         return;
       }
 
-      // CASE C: Flatten Wrappers (Removed 'pre' and 'code' from here)
-      if (['span', 'ms-cmark-node', 'div'].includes(tagName)) {
-        Array.from(el.childNodes).forEach(child => processNode(child, target));
-      }
+      // CASE C: Default - Flatten Unknown Wrappers
+      // This ensures nothing is silently dropped. We recurse into children of any unknown tag.
+      Array.from(el.childNodes).forEach(child => processNode(child, target));
     };
 
     Array.from(fragment.childNodes).forEach(node => processNode(node, cleanFragment));
