@@ -26,7 +26,7 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
         while (curr && fragment.contains(curr)) {
           const name = curr.nodeName.toLowerCase();
           if (['p', 'li', 'ul', 'ol', 'body', 'div', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(name)) break;
-          if (['ms-katex', 'pre', 'code', 'math', 'semantics'].includes(name) || (curr as Element).classList.contains('katex')) {
+          if (['ms-katex', 'pre', 'code', 'math', 'semantics'].includes(name) || (curr as Element).classList?.contains('katex')) {
              targetToReplace = curr;
           }
           curr = curr.parentNode;

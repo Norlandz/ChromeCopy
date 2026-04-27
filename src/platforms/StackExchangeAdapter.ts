@@ -37,7 +37,7 @@ export class StackExchangeAdapter implements IPlatformAdapter {
           // we ignore the script to avoid duplication (the holder rule will handle it).
           if (el.tagName.toLowerCase() === 'script') {
             const prev = el.previousElementSibling;
-            if (prev && (prev.classList.contains('MathJax') || prev.classList.contains('math-container'))) {
+            if (prev && (prev.classList?.contains('MathJax') || prev.classList?.contains('math-container'))) {
               return '';
             }
           }
@@ -45,7 +45,7 @@ export class StackExchangeAdapter implements IPlatformAdapter {
           let latex = LatexExtractor.extract(el);
           
           // StackExchange special: if node is MathJax span, source is often in NEXT sibling script
-          if (!latex && (el.classList.contains('MathJax') || el.classList.contains('math-container'))) {
+          if (!latex && (el.classList?.contains('MathJax') || el.classList?.contains('math-container'))) {
             const nextMatch = el.nextElementSibling;
             if (nextMatch && nextMatch.tagName.toLowerCase() === 'script' && nextMatch.getAttribute('type') === 'math/tex') {
               latex = nextMatch.textContent?.trim() || null;
@@ -53,7 +53,7 @@ export class StackExchangeAdapter implements IPlatformAdapter {
           }
 
           if (latex) {
-            const isDisplay = el.classList.contains('MathJax_Display') || 
+            const isDisplay = el.classList?.contains('MathJax_Display') || 
                              el.querySelector('.MathJax_Display') !== null;
             return isDisplay ? `\n\n$$\n${latex}\n$$\n\n` : ` $${latex}$ `;
           }

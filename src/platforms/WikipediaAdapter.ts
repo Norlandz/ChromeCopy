@@ -23,7 +23,7 @@ export class WikipediaAdapter implements IPlatformAdapter {
         },
         replacement: (content: string, node: Node) => {
           const latex = LatexExtractor.extract(node as Element);
-          const isDisplay = (node as Element).classList.contains('mwe-math-display') || 
+          const isDisplay = (node as Element).classList?.contains('mwe-math-display') || 
                            (node as Element).closest('.mwe-math-element[display]') !== null;
           if (latex) {
             return isDisplay ? `\n\n$$\n${latex}\n$$\n\n` : ` $${latex}$ `;
