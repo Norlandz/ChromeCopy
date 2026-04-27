@@ -24,16 +24,14 @@ export class StackExchangeAdapter implements IPlatformAdapter {
     return [
       {
         filter: (node: Node) => {
-          if (!(node instanceof Element)) return false;
-          const el = node;
+          const el = node as Element;
           // StackExchange uses MathJax. We match on the container or the script itself.
-          return el.classList.contains('MathJax') || 
-                 el.classList.contains('math-container') ||
+          return el.classList?.contains('MathJax') || 
+                 el.classList?.contains('math-container') ||
                  (el.tagName.toLowerCase() === 'script' && el.getAttribute('type') === 'math/tex');
         },
         replacement: (content: string, node: Node) => {
-          if (!(node instanceof HTMLElement)) return content;
-          const el = node;
+          const el = node as HTMLElement;
           
           // If we matched the script, and it has a preceding MathJax holder, 
           // we ignore the script to avoid duplication (the holder rule will handle it).

@@ -8,10 +8,10 @@ const gfm = turndownPluginGfm.gfm;
 function getTextWithLineBreaks(parentNode: Node): string {
   let text = '';
   parentNode.childNodes.forEach((child: Node) => {
-    if (child.nodeType === Node.TEXT_NODE) {
+    if (child.nodeType === 3) {
       text += child.textContent;
-    } else if (child instanceof HTMLElement) {
-      const element = child;
+    } else if (child.nodeType === 1) {
+      const element = child as HTMLElement;
       if (element.nodeName === 'BR') {
         text += '\n';
       } else {

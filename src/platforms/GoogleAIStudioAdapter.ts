@@ -19,24 +19,23 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
     mathSources.forEach(source => {
       if (!source.parentNode || !fragment.contains(source)) return;
 
-      const latex = LatexExtractor.extract(source);
+      const latex = LatexExtractor.extract(source as Element);
       if (latex) {
         let targetToReplace: Node = source;
         let curr: ParentNode | null = source.parentNode;
         while (curr && fragment.contains(curr)) {
           const name = curr.nodeName.toLowerCase();
           if (['p', 'li', 'ul', 'ol', 'body', 'div', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(name)) break;
-          if (['ms-katex', 'pre', 'code', 'math', 'semantics'].includes(name) || (curr instanceof Element && curr.classList.contains('katex'))) {
+          if (['ms-katex', 'pre', 'code', 'math', 'semantics'].includes(name) || (curr as Element).classList.contains('katex')) {
              targetToReplace = curr;
           }
           curr = curr.parentNode;
         }
 
-        const mathEl = (source.nodeName.toLowerCase() === 'math') ? source : source.querySelector('math');
-        const targetEl = targetToReplace instanceof Element ? targetToReplace : null;
+        const mathEl = (source.nodeName.toLowerCase() === 'math') ? source as Element : source.querySelector('math');
         const isDisplay = (mathEl?.getAttribute('display') === 'block') || 
-                          targetEl?.classList?.contains('display') || 
-                          targetEl?.querySelector?.('.katex-display') !== null;
+                          (targetToReplace as Element).classList?.contains('display') || 
+                          (targetToReplace as Element).querySelector?.('.katex-display') !== null;
 
         const wrapper = doc.createElement('span');
         wrapper.className = 'latex-js-shield';
@@ -53,17 +52,17 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
     const cleanFragment = doc.createDocumentFragment();
 
     const processNode = (node: Node, target: Node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
+      if (node.nodeType === 3) {
         // [NUCLEAR TRIM] Kill all newlines and multiple spaces
         const text = (node.textContent || '').replace(/[\n\r\t]+/g, ' ').replace(/\s+/g, ' ');
-        if (text === ' ' && (target.childNodes.length === 0 || (target.lastChild instanceof Element && target.lastChild.nodeName === 'BR'))) return;
-        if (text === ' ' && target.lastChild?.nodeType === Node.TEXT_NODE && target.lastChild.textContent?.endsWith(' ')) return;
+        if (text === ' ' && (target.childNodes.length === 0 || target.lastChild?.nodeName === 'BR')) return;
+        if (text === ' ' && target.lastChild?.nodeType === 3 && target.lastChild.textContent?.endsWith(' ')) return;
         
         target.appendChild(doc.createTextNode(text));
         return;
       }
 
-      if (node.nodeType !== Node.ELEMENT_NODE) return;
+      if (node.nodeType !== 1) return;
       const el = node as Element;
       const tagName = el.tagName.toLowerCase();
 
@@ -100,7 +99,7 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
     allPs.forEach(p => {
       p.normalize();
       // Remove trailing spaces inside P
-      if (p.lastChild?.nodeType === Node.TEXT_NODE) {
+      if (p.lastChild?.nodeType === 3) {
         p.lastChild.textContent = p.lastChild.textContent?.trimRight() || '';
       }
       if (!p.textContent?.trim() && !p.querySelector('.latex-js-shield, img')) p.remove();
@@ -110,10 +109,9 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
   public getRules(): TurndownService.Rule[] {
     return [
       {
-        filter: (node: Node) => node instanceof Element && node.nodeName.toLowerCase() === 'span' && node.classList.contains('latex-js-shield'),
+        filter: (node: Node) => node.nodeName.toLowerCase() === 'span' && (node as Element).classList.contains('latex-js-shield'),
         replacement: (_content: string, node: Node) => {
-          if (!(node instanceof Element)) return _content;
-          const el = node;
+          const el = node as Element;
           const latex = el.textContent || '';
           const isDisplay = el.getAttribute('data-display') === 'true';
           // Clean Rule: No manual \n\n hacks. Fences are enough for block identification.
