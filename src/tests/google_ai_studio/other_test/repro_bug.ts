@@ -1,5 +1,5 @@
-import { dom, window } from '../support/env';
-import { GoogleAIStudioAdapter } from '../../platforms/GoogleAIStudioAdapter';
+import { dom, window } from '../../support/env';
+import { GoogleAIStudioAdapter } from '../../../platforms/GoogleAIStudioAdapter';
 
 const document = window.document;
 const fragment = document.createDocumentFragment();
