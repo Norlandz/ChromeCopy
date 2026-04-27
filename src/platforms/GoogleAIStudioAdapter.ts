@@ -72,7 +72,14 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
         return;
       }
 
-      // CASE B: Safe Structural Tags
+      // CASE B: Code blocks — clone as-is to preserve whitespace.
+      // By this point all LaTeX <pre> are already shielded (step 1), so any <pre>/<code> here is real code.
+      if (tagName === 'pre' || tagName === 'code') {
+        target.appendChild(el.cloneNode(true));
+        return;
+      }
+
+      // CASE C: Safe Structural Tags
       const safeTags = ['p', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'hr', 'blockquote', 'img', 'pre', 'code', 'table', 'thead', 'tbody', 'tr', 'th', 'td'];
       const isPseudoP = tagName === 'div' && el.getAttribute('data-is-p') === 'true';
       

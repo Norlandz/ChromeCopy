@@ -42,11 +42,19 @@ export class DomProcessor {
     
     while (node) {
       if (node.textContent && node.textContent.trim() === '') {
-        // If it's a whitespace node between a span and a math node, it's toxic
-        const prev = node.previousSibling;
-        const next = node.nextSibling;
-        if (prev && next) {
-           nodesToRemove.push(node);
+        // Never strip whitespace inside pre/code: those spaces matter for code formatting.
+        // (LaTeX <pre> tags don't exist yet at this stage — they get shielded later.)
+        let ancestor = node.parentNode;
+        let insidePre = false;
+        while (ancestor && ancestor !== (fragment as unknown as Node)) {
+          const tag = (ancestor as Element).nodeName?.toLowerCase();
+          if (tag === 'pre' || tag === 'code') { insidePre = true; break; }
+          ancestor = ancestor.parentNode;
+        }
+        if (!insidePre) {
+          const prev = node.previousSibling;
+          const next = node.nextSibling;
+          if (prev && next) nodesToRemove.push(node);
         }
       }
       node = walker.nextNode();
