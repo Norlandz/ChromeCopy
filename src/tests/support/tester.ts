@@ -1,5 +1,4 @@
-import { JSDOM } from 'jsdom';
-import './env';
+import { window } from './env';
 import { MarkdownConverter, IPlatformAdapter } from '../../core/MarkdownConverter';
 
 /**
@@ -9,6 +8,7 @@ import { MarkdownConverter, IPlatformAdapter } from '../../core/MarkdownConverte
  */
 
 export function run_conversion(html: string, adapter: IPlatformAdapter, url: string): string {
+  console.info('[TEST-INFO] Using shared global JSDOM context. Ensure document.body is cleared.');
   const converter = new MarkdownConverter();
   converter.registerAdapter(adapter);
 
@@ -17,14 +17,13 @@ export function run_conversion(html: string, adapter: IPlatformAdapter, url: str
   // that contain block-level math elements.
   const safeHtml = html.replace(/<p\b/g, '<div data-is-p="true"').replace(/<\/p>/g, '</div>');
 
-  // Use a completely fresh JSDOM instance for the input to avoid tag-stripping
-  const dom = new JSDOM(safeHtml);
-  const body = dom.window.document.body;
+  const doc = window.document;
+  doc.body.innerHTML = safeHtml;
   
   // Convert body content to a fragment
-  const fragment = dom.window.document.createDocumentFragment();
-  while (body.firstChild) {
-    fragment.appendChild(body.firstChild);
+  const fragment = doc.createDocumentFragment();
+  while (doc.body.firstChild) {
+    fragment.appendChild(doc.body.firstChild);
   }
 
   // Execute conversion

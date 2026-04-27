@@ -1,8 +1,32 @@
+import { Logger } from './Logger';
+
 /**
  * Specialized utilities for cleaning and normalizing DOM trees
  * before conversion to Markdown.
  */
 export class DomProcessor {
+  /**
+   * Cross-realm safe type guard for Elements.
+   * Logs an error if a realm mismatch is detected (nodeType matches but instanceof fails).
+   */
+  public static isElement(node: Node | null): node is Element {
+    if (!node) return false;
+    const isElem = node.nodeType === Node.ELEMENT_NODE;
+    // Realm Sentinel: detect when JSDOM instances are mixed in tests
+    if (isElem && !(node instanceof Element)) {
+      Logger.error('[DOM-REALM-MISMATCH] Node is an Element (type 1), but instanceof Element is false. Test environment is likely using multiple JSDOM instances.');
+    }
+    return isElem;
+  }
+
+  /**
+   * Cross-realm safe type guard for Text nodes.
+   */
+  public static isText(node: Node | null): node is Text {
+    if (!node) return false;
+    return node.nodeType === Node.TEXT_NODE;
+  }
+
   /**
    * Recursively strips specific wrapper tags while preserving their children.
    * This is crucial for Google AI Studio which nests almost everything in <ms-cmark-node>.
@@ -41,14 +65,16 @@ export class DomProcessor {
     let node: Node | null = walker.nextNode();
     
     while (node) {
-      if (node.textContent && node.textContent.trim() === '') {
+      if (this.isText(node) && node.textContent?.trim() === '') {
         // Never strip whitespace inside pre/code: those spaces matter for code formatting.
         // (LaTeX <pre> tags don't exist yet at this stage — they get shielded later.)
         let ancestor = node.parentNode;
         let insidePre = false;
         while (ancestor && ancestor !== (fragment as unknown as Node)) {
-          const tag = (ancestor as Element).nodeName?.toLowerCase();
-          if (tag === 'pre' || tag === 'code') { insidePre = true; break; }
+          if (this.isElement(ancestor)) {
+            const tag = ancestor.nodeName.toLowerCase();
+            if (tag === 'pre' || tag === 'code') { insidePre = true; break; }
+          }
           ancestor = ancestor.parentNode;
         }
         if (!insidePre) {
@@ -59,6 +85,9 @@ export class DomProcessor {
       }
       node = walker.nextNode();
     }
-    nodesToRemove.forEach(n => (n as Element).remove());
+    nodesToRemove.forEach(n => {
+      if (this.isElement(n)) n.remove();
+      else n.parentNode?.removeChild(n);
+    });
   }
 }
