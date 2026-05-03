@@ -1,6 +1,5 @@
 import prettier from 'prettier';
-// @ts-ignore
-import parserMarkdown from 'prettier/plugins/markdown';
+import * as parserMarkdown from 'prettier/plugins/markdown';
 import { Logger } from './Logger';
 
 /**

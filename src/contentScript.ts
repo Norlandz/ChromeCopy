@@ -1,11 +1,13 @@
 import { MarkdownConverter } from './core/MarkdownConverter';
 import { GoogleAIStudioAdapter } from './platforms/GoogleAIStudioAdapter';
+import { OpenAIGPTAdapter } from './platforms/OpenAIGPTAdapter';
 import { WikipediaAdapter } from './platforms/WikipediaAdapter';
 import { StackExchangeAdapter } from './platforms/StackExchangeAdapter';
 import { MarkdownFormatter } from './core/MarkdownFormatter';
 
 const converter = new MarkdownConverter();
 converter.registerAdapter(new GoogleAIStudioAdapter());
+converter.registerAdapter(new OpenAIGPTAdapter());
 converter.registerAdapter(new WikipediaAdapter());
 converter.registerAdapter(new StackExchangeAdapter());
 
