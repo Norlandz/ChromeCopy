@@ -7,3 +7,5 @@
 *.nttc
 
 /.agents/
+
+/docs/todo.md

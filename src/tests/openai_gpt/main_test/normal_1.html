@@ -1,0 +1,122 @@
+<div class="markdown prose dark:prose-invert w-full wrap-break-word light markdown-new-styling">
+  <p>You are pointing at a real gap.</p>
+  <p>The shallow explanation says:</p>
+  <blockquote>
+    <p>The RNN hidden state “summarizes the previous tokens,” then the model “uses context,” then backprop “learns the
+      right representation.”</p>
+  </blockquote>
+  <p>That is not a mechanistic explanation. It is mostly a behavioral description.</p>
+  <p>The stricter version is:</p>
+  <p><span class="inline-block align-middle"><span class="katex"><span class="katex-mathml"><math
+            xmlns="http://www.w3.org/1998/Math/MathML">
+            <semantics>
+              <mrow>
+                <msub>
+                  <mi>h</mi>
+                  <mi>t</mi>
+                </msub>
+                <mo>=</mo>
+                <mi>ϕ</mi>
+                <mo stretchy="false">(</mo>
+                <msub>
+                  <mi>W</mi>
+                  <mi>x</mi>
+                </msub>
+                <msub>
+                  <mi>x</mi>
+                  <mi>t</mi>
+                </msub>
+                <mo>+</mo>
+                <msub>
+                  <mi>W</mi>
+                  <mi>h</mi>
+                </msub>
+                <msub>
+                  <mi>h</mi>
+                  <mrow>
+                    <mi>t</mi>
+                    <mo>−</mo>
+                    <mn>1</mn>
+                  </mrow>
+                </msub>
+                <mo>+</mo>
+                <mi>b</mi>
+                <mo stretchy="false">)</mo>
+              </mrow>
+              <annotation encoding="application/x-tex">h_t = \phi(W_x x_t + W_h h_{t-1} + b)</annotation>
+            </semantics>
+          </math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut"></span><span
+              class="mord"><span class="mord mathnormal">h</span><span class="msupsub"><span
+                  class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist"><span><span
+                          class="pstrut"></span><span class="sizing reset-size6 size3 mtight"><span
+                            class="mord mathnormal mtight">t</span></span></span></span><span
+                      class="vlist-s">&ZeroWidthSpace;</span></span><span class="vlist-r"><span
+                      class="vlist"><span></span></span></span></span></span></span><span class="mspace"></span><span
+              class="mrel">=</span><span class="mspace"></span></span><span class="base"><span
+              class="strut"></span><span class="mord mathnormal">ϕ</span><span class="mopen">(</span><span
+              class="mord"><span class="mord mathnormal">W</span><span class="msupsub"><span
+                  class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist"><span><span
+                          class="pstrut"></span><span class="sizing reset-size6 size3 mtight"><span
+                            class="mord mathnormal mtight">x</span></span></span></span><span
+                      class="vlist-s">&ZeroWidthSpace;</span></span><span class="vlist-r"><span
+                      class="vlist"><span></span></span></span></span></span></span><span class="mord"><span
+                class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span
+                    class="vlist-r"><span class="vlist"><span><span class="pstrut"></span><span
+                          class="sizing reset-size6 size3 mtight"><span
+                            class="mord mathnormal mtight">t</span></span></span></span><span
+                      class="vlist-s">&ZeroWidthSpace;</span></span><span class="vlist-r"><span
+                      class="vlist"><span></span></span></span></span></span></span><span class="mspace"></span><span
+              class="mbin">+</span><span class="mspace"></span></span><span class="base"><span
+              class="strut"></span><span class="mord"><span class="mord mathnormal">W</span><span class="msupsub"><span
+                  class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist"><span><span
+                          class="pstrut"></span><span class="sizing reset-size6 size3 mtight"><span
+                            class="mord mathnormal mtight">h</span></span></span></span><span
+                      class="vlist-s">&ZeroWidthSpace;</span></span><span class="vlist-r"><span
+                      class="vlist"><span></span></span></span></span></span></span><span class="mord"><span
+                class="mord mathnormal">h</span><span class="msupsub"><span class="vlist-t vlist-t2"><span
+                    class="vlist-r"><span class="vlist"><span><span class="pstrut"></span><span
+                          class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span
+                              class="mord mathnormal mtight">t</span><span class="mbin mtight">−</span><span
+                              class="mord mtight">1</span></span></span></span></span><span
+                      class="vlist-s">&ZeroWidthSpace;</span></span><span class="vlist-r"><span
+                      class="vlist"><span></span></span></span></span></span></span><span class="mspace"></span><span
+              class="mbin">+</span><span class="mspace"></span></span><span class="base"><span
+              class="strut"></span><span class="mord mathnormal">b</span><span
+              class="mclose">)</span></span></span></span></span></p>
+  <p>This equation does <strong>not</strong> say the hidden state “understands,” “summarizes,” or “contains meaning.” It
+    only says:</p>
+  <blockquote>
+    <p>the hidden state is a recursively updated vector whose values are chosen so that the final input-output behavior
+      reduces loss.</p>
+  </blockquote>
+  <p>That is much weaker.</p>
+  <p>A better way to say it:</p>
+  <blockquote>
+    <p>The hidden state is not intrinsically a “context vector.” It is a learned internal state of a dynamical system.
+      Its only formal meaning is its causal role in producing future outputs.</p>
+  </blockquote>
+  <p>The missing thing is usually this:</p>
+  <blockquote>
+    <p>There is no guaranteed semantic mapping from human concepts to hidden-state coordinates.</p>
+  </blockquote>
+  <p>People often talk as if:</p>
+  <pre
+    class="overflow-visible! px-0!"><div class="relative w-full mt-4 mb-1"><div class=""><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0" ><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback"><div class="pointer-events-none absolute end-1.5 top-1 z-2 md:end-2 md:top-1"><button class="flex gap-1 items-center select-none pointer-events-auto py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10 size-9 rounded-full px-2"  ><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" class="icon-md"><use href="/cdn/assets/sprites-core-6d2147a0.svg#ce3544" fill="currentColor"></use></svg></button></div><div class="relative"><div class="pe-11 pt-3" ><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼd ͼr"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0"><code><span>hidden state = compressed meaning of the past</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="">
+  <div class=""></div>
+</div>
+</div>
+</div>
+</div>
+</pre>
+
+</div>
