@@ -26,6 +26,6 @@ The missing thing is usually this:
 
 People often talk as if:
 
-```text
+```
 hidden state = compressed meaning of the past
 ```

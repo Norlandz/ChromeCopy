@@ -70,6 +70,7 @@ export class MarkdownConverter {
         const eltCode = node.firstElementChild as HTMLElement;
         const className = eltCode.getAttribute('class') || '';
         const language = (className.match(/language-(\S+)/) || [null, ''])[1];
+        const infoString = language.toLowerCase() === 'text' ? '' : language;
         const code = eltCode.textContent ?? '';
         
         const fenceChar = options.fence?.charAt(0) || '`';
@@ -82,7 +83,7 @@ export class MarkdownConverter {
           }
         }
         const fence = Array(fenceSize + 1).join(fenceChar);
-        return '\n\n' + fence + language + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n';
+        return '\n\n' + fence + infoString + '\n' + code.replace(/\n$/, '') + '\n' + fence + '\n\n';
       },
     });
   }

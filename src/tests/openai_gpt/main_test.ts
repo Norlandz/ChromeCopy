@@ -8,7 +8,8 @@ import { OpenAIGPTAdapter } from '../../platforms/OpenAIGPTAdapter';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const htmlPath = path.join(__dirname, 'main_test/normal_1.html');
+// const htmlPath = path.join(__dirname, 'main_test/normal_1.html');
+const htmlPath = path.join(__dirname, 'other_test/pre_code_tag.html');
 const html = fs.readFileSync(htmlPath, 'utf8');
 
 import { MarkdownFormatter } from '../../core/MarkdownFormatter';

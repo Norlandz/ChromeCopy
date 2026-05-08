@@ -54,11 +54,27 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
 
       const replacementPre = doc.createElement('pre');
       const replacementCode = doc.createElement('code');
-      replacementCode.className = 'language-text';
+      const language = this.getCodeBlockLanguage(pre);
+      if (language) {
+        replacementCode.className = `language-${language}`;
+      }
       replacementCode.textContent = this.getTextWithLineBreaks(code).replace(/\n+$/g, '');
       replacementPre.appendChild(replacementCode);
       pre.replaceWith(replacementPre);
     });
+  }
+
+  private getCodeBlockLanguage(pre: Element): string {
+    const stickyHeader = pre.querySelector('.sticky');
+    if (!stickyHeader) return '';
+
+    const titleElement = Array.from(stickyHeader.querySelectorAll('div')).find(el => {
+      const text = (el.textContent || '').trim();
+      return text.length > 0 && el.classList.contains('text-token-text-primary');
+    });
+
+    const language = (titleElement?.textContent || '').trim().toLowerCase();
+    return language === 'text' ? '' : language;
   }
 
   private shieldLatex(fragment: DocumentFragment): void {
