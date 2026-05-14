@@ -1,0 +1,439 @@
+<h5><span class="">Efficient Self‑Attention (ESA)</span></h5>
+<p class="ds-markdown-paragraph">
+  <span class="">Standard multi‑head attention would cost</span>
+  <span class="katex">
+    <span class="katex-mathml">
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <semantics>
+          <mrow>
+            <mi mathvariant="script">O</mi>
+            <mo stretchy="false">(</mo>
+            <msubsup>
+              <mi>N</mi>
+              <mn>1</mn>
+              <mn>2</mn>
+            </msubsup>
+            <mo stretchy="false">)</mo>
+          </mrow>
+          <annotation encoding="application/x-tex">\mathcal{O}(N_1^2)</annotation>
+        </semantics>
+      </math>
+    </span>
+    <span class="katex-html" aria-hidden="true">
+      <span class="base">
+        <span class="strut" style="height: 1.0641em; vertical-align: -0.25em"></span>
+        <span class="mord mathcal" style="margin-right: 0.02778em">O</span>
+        <span class="mopen">(</span>
+        <span class="mord">
+          <span class="mord mathnormal" style="margin-right: 0.10903em">N</span>
+          <span class="msupsub">
+            <span class="vlist-t vlist-t2">
+              <span class="vlist-r">
+                <span class="vlist" style="height: 0.8141em">
+                  <span style="top: -2.4519em; margin-left: -0.109em; margin-right: 0.05em">
+                    <span class="pstrut" style="height: 2.7em"></span>
+                    <span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span>
+                  </span>
+                  <span style="top: -3.063em; margin-right: 0.05em">
+                    <span class="pstrut" style="height: 2.7em"></span>
+                    <span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span>
+                  </span>
+                </span>
+                <span class="vlist-s">​</span>
+              </span>
+              <span class="vlist-r">
+                <span class="vlist" style="height: 0.2481em"><span></span></span>
+              </span>
+            </span>
+          </span>
+        </span>
+        <span class="mclose">)</span>
+      </span>
+    </span>
+  </span>
+  <span class="">. SegFormer uses a</span>
+  <strong><span class="">reduction ratio</span></strong>
+  <span class=""></span>
+  <span class="katex">
+    <span class="katex-mathml">
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <semantics>
+          <mrow>
+            <msub>
+              <mi>R</mi>
+              <mn>1</mn>
+            </msub>
+          </mrow>
+          <annotation encoding="application/x-tex">R_1</annotation>
+        </semantics>
+      </math>
+    </span>
+    <span class="katex-html" aria-hidden="true">
+      <span class="base">
+        <span class="strut" style="height: 0.8333em; vertical-align: -0.15em"></span>
+        <span class="mord">
+          <span class="mord mathnormal" style="margin-right: 0.00773em">R</span>
+          <span class="msupsub">
+            <span class="vlist-t vlist-t2">
+              <span class="vlist-r">
+                <span class="vlist" style="height: 0.3011em">
+                  <span style="top: -2.55em; margin-left: -0.0077em; margin-right: 0.05em">
+                    <span class="pstrut" style="height: 2.7em"></span>
+                    <span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span>
+                  </span>
+                </span>
+                <span class="vlist-s">​</span>
+              </span>
+              <span class="vlist-r">
+                <span class="vlist" style="height: 0.15em"><span></span></span>
+              </span>
+            </span>
+          </span>
+        </span>
+      </span>
+    </span>
+  </span>
+  <span class="">(here</span>
+  <span class="katex">
+    <span class="katex-mathml">
+      <math xmlns="http://www.w3.org/1998/Math/MathML">
+        <semantics>
+          <mrow>
+            <msub>
+              <mi>R</mi>
+              <mn>1</mn>
+            </msub>
+            <mo>=</mo>
+            <mn>8</mn>
+          </mrow>
+          <annotation encoding="application/x-tex">R_1=8</annotation>
+        </semantics>
+      </math>
+    </span>
+    <span class="katex-html" aria-hidden="true">
+      <span class="base">
+        <span class="strut" style="height: 0.8333em; vertical-align: -0.15em"></span>
+        <span class="mord">
+          <span class="mord mathnormal" style="margin-right: 0.00773em">R</span>
+          <span class="msupsub">
+            <span class="vlist-t vlist-t2">
+              <span class="vlist-r">
+                <span class="vlist" style="height: 0.3011em">
+                  <span style="top: -2.55em; margin-left: -0.0077em; margin-right: 0.05em">
+                    <span class="pstrut" style="height: 2.7em"></span>
+                    <span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span>
+                  </span>
+                </span>
+                <span class="vlist-s">​</span>
+              </span>
+              <span class="vlist-r">
+                <span class="vlist" style="height: 0.15em"><span></span></span>
+              </span>
+            </span>
+          </span>
+        </span>
+        <span class="mspace" style="margin-right: 0.2778em"></span>
+        <span class="mrel">=</span>
+        <span class="mspace" style="margin-right: 0.2778em"></span>
+      </span>
+      <span class="base">
+        <span class="strut" style="height: 0.6444em"></span>
+        <span class="mord">8</span>
+      </span>
+    </span>
+  </span>
+  <span class="">) to shrink the key/value sequence length.</span>
+</p>
+<ol start="1">
+  <li>
+    <p class="ds-markdown-paragraph">
+      <strong><span class="">Queries</span></strong>
+      <span class="">(no reduction)</span>
+    </p>
+    <span class="katex-display ds-markdown-math">
+      <span class="katex">
+        <span class="katex-mathml">
+          <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+            <semantics>
+              <mrow>
+                <mi mathvariant="bold">Q</mi>
+                <mo>=</mo>
+                <msup>
+                  <mi mathvariant="bold">X</mi>
+                  <mo mathvariant="normal" lspace="0em" rspace="0em">′</mo>
+                </msup>
+                <msub>
+                  <mi mathvariant="bold">W</mi>
+                  <mi>Q</mi>
+                </msub>
+                <mo separator="true">,</mo>
+                <mspace width="1em"></mspace>
+                <msub>
+                  <mi mathvariant="bold">W</mi>
+                  <mi>Q</mi>
+                </msub>
+                <mo>∈</mo>
+                <msup>
+                  <mi mathvariant="double-struck">R</mi>
+                  <mrow>
+                    <msub>
+                      <mi>C</mi>
+                      <mn>1</mn>
+                    </msub>
+                    <mo>×</mo>
+                    <msub>
+                      <mi>d</mi>
+                      <mtext>head</mtext>
+                    </msub>
+                    <mo>⋅</mo>
+                    <mi>h</mi>
+                  </mrow>
+                </msup>
+                <mo separator="true">,</mo>
+              </mrow>
+              <annotation encoding="application/x-tex">\mathbf{Q} = \mathbf{X}'\mathbf{W}_Q, \quad \mathbf{W}_Q \in \mathbb{R}^{C_1 \times d_{\text{head}}\cdot h},</annotation>
+            </semantics>
+          </math>
+        </span>
+        <span class="katex-html" aria-hidden="true">
+          <span class="base">
+            <span class="strut" style="height: 0.8805em; vertical-align: -0.1944em"></span>
+            <span class="mord mathbf">Q</span>
+            <span class="mspace" style="margin-right: 0.2778em"></span>
+            <span class="mrel">=</span>
+            <span class="mspace" style="margin-right: 0.2778em"></span>
+          </span>
+          <span class="base">
+            <span class="strut" style="height: 1.088em; vertical-align: -0.2861em"></span>
+            <span class="mord">
+              <span class="mord mathbf">X</span>
+              <span class="msupsub">
+                <span class="vlist-t">
+                  <span class="vlist-r">
+                    <span class="vlist" style="height: 0.8019em">
+                      <span style="top: -3.113em; margin-right: 0.05em">
+                        <span class="pstrut" style="height: 2.7em"></span>
+                        <span class="sizing reset-size6 size3 mtight">
+                          <span class="mord mtight"><span class="mord mtight">′</span></span>
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                </span>
+              </span>
+            </span>
+            <span class="mord">
+              <span class="mord mathbf" style="margin-right: 0.01597em">W</span>
+              <span class="msupsub">
+                <span class="vlist-t vlist-t2">
+                  <span class="vlist-r">
+                    <span class="vlist" style="height: 0.3283em">
+                      <span style="top: -2.55em; margin-left: -0.016em; margin-right: 0.05em">
+                        <span class="pstrut" style="height: 2.7em"></span>
+                        <span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">Q</span></span>
+                      </span>
+                    </span>
+                    <span class="vlist-s">​</span>
+                  </span>
+                  <span class="vlist-r">
+                    <span class="vlist" style="height: 0.2861em"><span></span></span>
+                  </span>
+                </span>
+              </span>
+            </span>
+            <span class="mpunct">,</span>
+            <span class="mspace" style="margin-right: 1em"></span>
+            <span class="mspace" style="margin-right: 0.1667em"></span>
+            <span class="mord">
+              <span class="mord mathbf" style="margin-right: 0.01597em">W</span>
+              <span class="msupsub">
+                <span class="vlist-t vlist-t2">
+                  <span class="vlist-r">
+                    <span class="vlist" style="height: 0.3283em">
+                      <span style="top: -2.55em; margin-left: -0.016em; margin-right: 0.05em">
+                        <span class="pstrut" style="height: 2.7em"></span>
+                        <span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">Q</span></span>
+                      </span>
+                    </span>
+                    <span class="vlist-s">​</span>
+                  </span>
+                  <span class="vlist-r">
+                    <span class="vlist" style="height: 0.2861em"><span></span></span>
+                  </span>
+                </span>
+              </span>
+            </span>
+            <span class="mspace" style="margin-right: 0.2778em"></span>
+            <span class="mrel">∈</span>
+            <span class="mspace" style="margin-right: 0.2778em"></span>
+          </span>
+          <span class="base">
+            <span class="strut" style="height: 1.0935em; vertical-align: -0.1944em"></span>
+            <span class="mord">
+              <span class="mord mathbb">R</span>
+              <span class="msupsub">
+                <span class="vlist-t">
+                  <span class="vlist-r">
+                    <span class="vlist" style="height: 0.8991em">
+                      <span style="top: -3.113em; margin-right: 0.05em">
+                        <span class="pstrut" style="height: 2.7em"></span>
+                        <span class="sizing reset-size6 size3 mtight">
+                          <span class="mord mtight">
+                            <span class="mord mtight">
+                              <span class="mord mathnormal mtight" style="margin-right: 0.07153em">C</span>
+                              <span class="msupsub">
+                                <span class="vlist-t vlist-t2">
+                                  <span class="vlist-r">
+                                    <span class="vlist" style="height: 0.3173em">
+                                      <span style="top: -2.357em; margin-left: -0.0715em; margin-right: 0.0714em">
+                                        <span class="pstrut" style="height: 2.5em"></span>
+                                        <span class="sizing reset-size3 size1 mtight"><span class="mord mtight">1</span></span>
+                                      </span>
+                                    </span>
+                                    <span class="vlist-s">​</span>
+                                  </span>
+                                  <span class="vlist-r">
+                                    <span class="vlist" style="height: 0.143em"><span></span></span>
+                                  </span>
+                                </span>
+                              </span>
+                            </span>
+                            <span class="mbin mtight">×</span>
+                            <span class="mord mtight">
+                              <span class="mord mathnormal mtight">d</span>
+                              <span class="msupsub">
+                                <span class="vlist-t vlist-t2">
+                                  <span class="vlist-r">
+                                    <span class="vlist" style="height: 0.3448em">
+                                      <span style="top: -2.3488em; margin-left: 0em; margin-right: 0.0714em">
+                                        <span class="pstrut" style="height: 2.5em"></span>
+                                        <span class="sizing reset-size3 size1 mtight">
+                                          <span class="mord mtight">
+                                            <span class="mord text mtight"><span class="mord mtight">head</span></span>
+                                          </span>
+                                        </span>
+                                      </span>
+                                    </span>
+                                    <span class="vlist-s">​</span>
+                                  </span>
+                                  <span class="vlist-r">
+                                    <span class="vlist" style="height: 0.1512em"><span></span></span>
+                                  </span>
+                                </span>
+                              </span>
+                            </span>
+                            <span class="mbin mtight">⋅</span>
+                            <span class="mord mathnormal mtight">h</span>
+                          </span>
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                </span>
+              </span>
+            </span>
+            <span class="mpunct">,</span>
+          </span>
+        </span>
+      </span>
+    </span>
+    <p class="ds-markdown-paragraph">
+      <span class="">where</span>
+      <span class="katex">
+        <span class="katex-mathml">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <semantics>
+              <mrow><mi>h</mi></mrow>
+              <annotation encoding="application/x-tex">h</annotation>
+            </semantics>
+          </math>
+        </span>
+        <span class="katex-html" aria-hidden="true">
+          <span class="base">
+            <span class="strut" style="height: 0.6944em"></span>
+            <span class="mord mathnormal">h</span>
+          </span>
+        </span>
+      </span>
+      <span class="">is the number of heads and</span>
+      <span class="katex">
+        <span class="katex-mathml">
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <semantics>
+              <mrow>
+                <msub>
+                  <mi>d</mi>
+                  <mtext>head</mtext>
+                </msub>
+                <mo>=</mo>
+                <msub>
+                  <mi>C</mi>
+                  <mn>1</mn>
+                </msub>
+                <mi mathvariant="normal">/</mi>
+                <mi>h</mi>
+              </mrow>
+              <annotation encoding="application/x-tex">d_{\text{head}} = C_1/h</annotation>
+            </semantics>
+          </math>
+        </span>
+        <span class="katex-html" aria-hidden="true">
+          <span class="base">
+            <span class="strut" style="height: 0.8444em; vertical-align: -0.15em"></span>
+            <span class="mord">
+              <span class="mord mathnormal">d</span>
+              <span class="msupsub">
+                <span class="vlist-t vlist-t2">
+                  <span class="vlist-r">
+                    <span class="vlist" style="height: 0.3361em">
+                      <span style="top: -2.55em; margin-left: 0em; margin-right: 0.05em">
+                        <span class="pstrut" style="height: 2.7em"></span>
+                        <span class="sizing reset-size6 size3 mtight">
+                          <span class="mord mtight">
+                            <span class="mord text mtight"><span class="mord mtight">head</span></span>
+                          </span>
+                        </span>
+                      </span>
+                    </span>
+                    <span class="vlist-s">​</span>
+                  </span>
+                  <span class="vlist-r">
+                    <span class="vlist" style="height: 0.15em"><span></span></span>
+                  </span>
+                </span>
+              </span>
+            </span>
+            <span class="mspace" style="margin-right: 0.2778em"></span>
+            <span class="mrel">=</span>
+            <span class="mspace" style="margin-right: 0.2778em"></span>
+          </span>
+          <span class="base">
+            <span class="strut" style="height: 1em; vertical-align: -0.25em"></span>
+            <span class="mord">
+              <span class="mord mathnormal" style="margin-right: 0.07153em">C</span>
+              <span class="msupsub">
+                <span class="vlist-t vlist-t2">
+                  <span class="vlist-r">
+                    <span class="vlist" style="height: 0.3011em">
+                      <span style="top: -2.55em; margin-left: -0.0715em; margin-right: 0.05em">
+                        <span class="pstrut" style="height: 2.7em"></span>
+                        <span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span>
+                      </span>
+                    </span>
+                    <span class="vlist-s">​</span>
+                  </span>
+                  <span class="vlist-r">
+                    <span class="vlist" style="height: 0.15em"><span></span></span>
+                  </span>
+                </span>
+              </span>
+            </span>
+            <span class="mord">/</span>
+            <span class="mord mathnormal">h</span>
+          </span>
+        </span>
+      </span>
+      <span class="">. After splitting into heads:</span>
+    </p>
+  </li>
+</ol>
