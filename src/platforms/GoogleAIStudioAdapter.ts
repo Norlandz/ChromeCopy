@@ -1,6 +1,7 @@
 import { IPlatformAdapter } from '../core/MarkdownConverter';
 import { DomProcessor } from '../core/DomProcessor';
 import { LatexExtractor } from '../core/LatexExtractor';
+import { MathProcessor } from '../core/MathProcessor';
 import TurndownService from 'turndown';
 
 export class GoogleAIStudioAdapter implements IPlatformAdapter {
@@ -114,17 +115,6 @@ export class GoogleAIStudioAdapter implements IPlatformAdapter {
   }
 
   public getRules(): TurndownService.Rule[] {
-    return [
-      {
-        filter: (node: Node) => node.nodeName.toLowerCase() === 'span' && (node as Element).classList.contains('latex-js-shield'),
-        replacement: (_content: string, node: Node) => {
-          const el = node as Element;
-          const latex = el.textContent || '';
-          const isDisplay = el.getAttribute('data-display') === 'true';
-          // Clean Rule: No manual \n\n hacks. Fences are enough for block identification.
-          return isDisplay ? `\n$$\n${latex.trim()}\n$$\n` : `$${latex.trim()}$`;
-        }
-      }
-    ];
+    return [MathProcessor.getShieldRule()];
   }
 }

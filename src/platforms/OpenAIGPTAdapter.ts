@@ -1,5 +1,6 @@
 import { IPlatformAdapter } from '../core/MarkdownConverter';
 import { LatexExtractor } from '../core/LatexExtractor';
+import { MathProcessor } from '../core/MathProcessor';
 import TurndownService from 'turndown';
 
 export class OpenAIGPTAdapter implements IPlatformAdapter {
@@ -24,22 +25,7 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
   }
 
   public getRules(): TurndownService.Rule[] {
-    return [
-      {
-        filter: (node: Node) => {
-          return (
-            node.nodeName.toLowerCase() === 'span' &&
-            (node as Element).classList.contains('latex-js-shield')
-          );
-        },
-        replacement: (_content: string, node: Node) => {
-          const el = node as Element;
-          const latex = (el.textContent || '').trim();
-          const isDisplay = el.getAttribute('data-display') === 'true';
-          return isDisplay ? `\n$$\n${latex}\n$$\n` : `$${latex}$`;
-        },
-      },
-    ];
+    return [MathProcessor.getShieldRule()];
   }
 
   private normalizeCodeBlocks(fragment: DocumentFragment): void {

@@ -2,6 +2,7 @@ import TurndownService, { type TagName } from 'turndown';
 // @ts-ignore
 import * as turndownPluginGfm from '@guyplusplus/turndown-plugin-gfm';
 import { DomProcessor } from './DomProcessor';
+import { MathProcessor } from './MathProcessor';
 
 const gfm = turndownPluginGfm.gfm;
 
@@ -47,6 +48,7 @@ export class MarkdownConverter {
     });
 
     this.turndownService.use(gfm);
+    this.turndownService.addRule('latexShield', MathProcessor.getShieldRule());
 
     // Global Recovery: Restore legacy PRE block rules
     this.turndownService.addRule('pre_block', {
@@ -100,6 +102,7 @@ export class MarkdownConverter {
 
     // 1. General Pre-processing
     DomProcessor.trimStructure(fragment);
+    MathProcessor.shieldLatex(fragment);
 
     // 2. Platform-specific Pre-processing
     activeAdapters.forEach(a => {

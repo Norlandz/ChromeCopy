@@ -63,8 +63,13 @@ export class LatexExtractor {
       tag === 'ms-katex' ||
       el.classList.contains('katex') ||
       el.classList.contains('MathJax') ||
+      el.classList.contains('math-container') ||
+      el.classList.contains('mwe-math-element') ||
+      el.classList.contains('mwe-math-fallback-image-inline') ||
+      el.classList.contains('mwe-math-fallback-image-display') ||
       el.classList.contains('ztext-math') ||
-      tag === 'math'
+      tag === 'math' ||
+      (tag === 'script' && el.getAttribute('type')?.startsWith('math/tex') === true)
     );
   }
 }
