@@ -10,17 +10,17 @@
     "build:ts": "tsc --project ./tsconfig.json"
   },
   "devDependencies": {
-    "@eslint/create-config": "^2.0.0",
+    "@eslint/js": "^10.0.1",
     "@types/jsdom": "^28.0.3",
     "@types/turndown": "^5.0.6",
-    "@typescript-eslint/eslint-plugin": "^8.66.0",
-    "@typescript-eslint/parser": "^8.66.0",
     "chrome-types": "^0.1.436",
     "esbuild-loader": "^4.5.0",
     "eslint": "^10.8.0",
+    "globals": "^17.9.0",
     "jsdom": "^30.0.1",
     "tsx": "^4.23.9",
-    "typescript": "^7.0.2",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.66.0",
     "webpack": "^5.109.2",
     "webpack-cli": "^7.2.2"
   },
