@@ -35,7 +35,7 @@
     "declaration": true,
     "declarationMap": true,
     //
-    // "rootDir": ".",
+    "rootDir": ".",
     "outDir": "dist",
     //
     "allowJs": true,
@@ -45,9 +45,8 @@
     "types": [
       "chrome-types"
     ],
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
