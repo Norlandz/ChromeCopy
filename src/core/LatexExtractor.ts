@@ -15,22 +15,31 @@ export class LatexExtractor {
       if (!DomProcessor.isElement(root)) return null;
       const el = root;
 
-      // Check 1: Standard Katex Annotation
+      // Check 1: ChatGPT's current semantic math container.
+      // Newer responses expose the source on the outer element instead of
+      // rendering a MathML <annotation> inside .katex.
+      const dataMathSource = el.getAttribute('data-math-source');
+      if (dataMathSource) {
+        const tex = dataMathSource.trim();
+        if (tex) return tex;
+      }
+
+      // Check 2: Standard Katex Annotation
       if (el.tagName.toLowerCase() === 'annotation' && el.getAttribute('encoding') === 'application/x-tex') {
         const tex = el.textContent?.trim();
         if (tex) return tex;
       }
 
-      // Check 2: script math
+      // Check 3: script math
       if (el.tagName.toLowerCase() === 'script' && el.getAttribute('type')?.startsWith('math/tex')) {
         return el.textContent?.trim() || null;
       }
 
-      // Check 3: data-tex attribute
+      // Check 4: data-tex attribute
       const dataTex = el.getAttribute('data-tex');
       if (dataTex) return dataTex.trim();
 
-      // Check 4: MathImg alt text
+      // Check 5: MathImg alt text
       if (el.tagName.toLowerCase() === 'img' && (el.classList.contains('mwe-math-fallback-image-inline') || el.classList.contains('mwe-math-fallback-image-display'))) {
         return el.getAttribute('alt')?.trim() || null;
       }

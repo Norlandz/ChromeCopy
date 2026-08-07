@@ -65,7 +65,7 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
 
   private shieldLatex(fragment: DocumentFragment): void {
     const doc = fragment.ownerDocument;
-    const mathSources = Array.from(fragment.querySelectorAll('.katex, math'));
+    const mathSources = Array.from(fragment.querySelectorAll('[data-math-source], [role="math"], .katex, math'));
 
     mathSources.forEach(source => {
       if (!source.parentNode || !fragment.contains(source)) return;
@@ -74,9 +74,12 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
       if (!latex) return;
 
       let targetToReplace: Element = source;
+      const semanticContainer = source.closest('[data-math-source], [role="math"]');
       const displayParent = source.closest('.katex-display');
       const katexParent = source.closest('.katex');
-      if (displayParent && fragment.contains(displayParent)) {
+      if (semanticContainer && fragment.contains(semanticContainer)) {
+        targetToReplace = semanticContainer;
+      } else if (displayParent && fragment.contains(displayParent)) {
         targetToReplace = displayParent;
       } else if (katexParent && fragment.contains(katexParent)) {
         targetToReplace = katexParent;
@@ -86,7 +89,8 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
       const isDisplay =
         mathEl?.getAttribute('display') === 'block' ||
         targetToReplace.classList.contains('katex-display') ||
-        targetToReplace.querySelector('.katex-display') !== null;
+        targetToReplace.querySelector('.katex-display') !== null ||
+        /(?:^|;)\s*display\s*:\s*block\b/i.test(targetToReplace.getAttribute('style') || '');
 
       const wrapper = doc.createElement('span');
       wrapper.className = 'latex-js-shield';
