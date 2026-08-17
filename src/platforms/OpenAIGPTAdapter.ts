@@ -35,7 +35,13 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
     preBlocks.forEach(pre => {
       if (!fragment.contains(pre)) return;
 
-      const code = pre.querySelector('.cm-content code');
+      // const code = pre.querySelector('.cm-content code');
+      
+      // ChatGPT has used both a CodeMirror `<pre class="cm-content"><code>`
+      // layout and a newer `<div class="cm-content"><div class="cm-line">`
+      // layout. The latter must be normalized before Turndown sees the block,
+      // otherwise its line elements are treated as inline content.
+      const code = pre.querySelector('.cm-content');
       if (!code) return;
 
       const replacementPre = doc.createElement('pre');
@@ -102,6 +108,20 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
   }
 
   private getTextWithLineBreaks(parentNode: Node): string {
+    const lineElements = parentNode instanceof Element
+      ? Array.from(parentNode.querySelectorAll('.cm-line'))
+      : [];
+
+    if (lineElements.length > 0) {
+      return lineElements
+        .map(line => this.getTextFromNode(line, false))
+        .join('\n');
+    }
+
+    return this.getTextFromNode(parentNode, true);
+  }
+
+  private getTextFromNode(parentNode: Node, preserveBreakElements: boolean): string {
     let text = '';
 
     parentNode.childNodes.forEach(child => {
@@ -110,9 +130,9 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
       } else if (child.nodeType === Node.ELEMENT_NODE) {
         const element = child as Element;
         if (element.nodeName === 'BR') {
-          text += '\n';
+          if (preserveBreakElements) text += '\n';
         } else {
-          text += this.getTextWithLineBreaks(element);
+          text += this.getTextFromNode(element, preserveBreakElements);
         }
       }
     });
