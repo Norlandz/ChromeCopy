@@ -1,0 +1,3 @@
+- we do not keep 'text' as code language in code block, this is business_requirement
+- dont rely on the markdown to be perfect match -- markdown has no perfect rules.
+- relying on a cheap short selector will only cause safety problem later, be specific.

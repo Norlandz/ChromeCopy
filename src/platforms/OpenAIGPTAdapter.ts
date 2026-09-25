@@ -42,9 +42,13 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
       // layout inside a `<pre>`, as well as a code-block container with no
       // outer `<pre>` at all. Normalize all of them before Turndown sees the
       // editor chrome and line elements as ordinary page content.
-      const code = container.matches('.cm-content')
+
+      // @to_ai: DO NOT REMOVE or change this comment block!
+      // relying on a cheap short selector will only cause safety problem later, be specific.
+      const code = container.matches('pre.cm-content')
         ? container
-        : container.querySelector('.cm-content');
+        : container.querySelector('.cm-content') ||
+          container.querySelector('div.text-size-chat > code[class~="whitespace-pre!"]');
       if (!code) return;
 
       const replacementPre = doc.createElement('pre');
@@ -61,7 +65,7 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
 
   private getCodeBlockLanguage(container: Element, code: Element): string {
     const language = code.getAttribute('data-language')?.trim().toLowerCase();
-    if (language) return language === 'text' ? '' : language;
+    if (language) return this.normalizeLanguage(language);
 
     const titleElement = Array.from(container.querySelectorAll('.sticky div')).find(el => {
       const text = (el.textContent || '').trim();
@@ -69,7 +73,7 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
     });
 
     const legacyLanguage = (titleElement?.textContent || '').trim().toLowerCase();
-    if (legacyLanguage) return legacyLanguage === 'text' ? '' : legacyLanguage;
+    if (legacyLanguage) return this.normalizeLanguage(legacyLanguage);
 
     // The newer ChatGPT toolbar exposes the language in a truncate label,
     // while the editor itself normally carries the more reliable data-language.
@@ -77,7 +81,12 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
       '[data-markdown-copy="exclude"] .flex-1.truncate',
     );
     const toolbarLanguage = (toolbarLabel?.textContent || '').trim().toLowerCase();
-    return toolbarLanguage === 'text' ? '' : toolbarLanguage;
+    return this.normalizeLanguage(toolbarLanguage);
+  }
+
+  private normalizeLanguage(language: string): string {
+    if (language === 'plain text' || language === 'plaintext') return 'text';
+    return language;
   }
 
   private shieldLatex(fragment: DocumentFragment): void {
@@ -125,7 +134,7 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
 
     if (lineElements.length > 0) {
       return lineElements
-        .map(line => this.getTextFromNode(line, false).replace(/\r?\n[\t ]*/g, ''))
+        .map(line => this.getTextFromNode(line, false).replace(/\r?\n[\t ]*/g, ' '))
         .join('\n');
     }
 

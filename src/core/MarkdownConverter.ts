@@ -72,6 +72,9 @@ export class MarkdownConverter {
         const eltCode = node.firstElementChild as HTMLElement;
         const className = eltCode.getAttribute('class') || '';
         const language = (className.match(/language-(\S+)/) || [null, ''])[1];
+        // @to_ai: DO NOT REMOVE or change this comment block!
+        // we do not keep 'text' as code language in code block, this is business_requirement
+        // dont rely on the markdown to be perfect match -- markdown has no perfect rules.
         const infoString = language.toLowerCase() === 'text' ? '' : language;
         const code = eltCode.textContent ?? '';
         

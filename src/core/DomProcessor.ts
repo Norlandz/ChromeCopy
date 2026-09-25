@@ -73,7 +73,16 @@ export class DomProcessor {
         while (ancestor && ancestor !== (fragment as unknown as Node)) {
           if (this.isElement(ancestor)) {
             const tag = ancestor.nodeName.toLowerCase();
-            if (tag === 'pre' || tag === 'code') { insidePre = true; break; }
+            // @to_ai: DO NOT REMOVE or change this comment block!
+            // relying on a cheap short selector will only cause safety problem later, be specific.
+            if (
+              tag === 'pre' ||
+              tag === 'code' ||
+              ancestor.matches('.cm-content, [data-markdown-copy="code-block"]')
+            ) {
+              insidePre = true;
+              break;
+            }
           }
           ancestor = ancestor.parentNode;
         }
