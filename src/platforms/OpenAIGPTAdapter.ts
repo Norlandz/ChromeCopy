@@ -30,43 +30,54 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
 
   private normalizeCodeBlocks(fragment: DocumentFragment): void {
     const doc = fragment.ownerDocument;
-    const preBlocks = Array.from(fragment.querySelectorAll('pre'));
+    const codeBlockContainers = Array.from(
+      fragment.querySelectorAll('pre, [data-markdown-copy="code-block"]'),
+    );
 
-    preBlocks.forEach(pre => {
-      if (!fragment.contains(pre)) return;
+    codeBlockContainers.forEach(container => {
+      if (!fragment.contains(container)) return;
 
-      // const code = pre.querySelector('.cm-content code');
-      
       // ChatGPT has used both a CodeMirror `<pre class="cm-content"><code>`
       // layout and a newer `<div class="cm-content"><div class="cm-line">`
-      // layout. The latter must be normalized before Turndown sees the block,
-      // otherwise its line elements are treated as inline content.
-      const code = pre.querySelector('.cm-content');
+      // layout inside a `<pre>`, as well as a code-block container with no
+      // outer `<pre>` at all. Normalize all of them before Turndown sees the
+      // editor chrome and line elements as ordinary page content.
+      const code = container.matches('.cm-content')
+        ? container
+        : container.querySelector('.cm-content');
       if (!code) return;
 
       const replacementPre = doc.createElement('pre');
       const replacementCode = doc.createElement('code');
-      const language = this.getCodeBlockLanguage(pre);
+      const language = this.getCodeBlockLanguage(container, code);
       if (language) {
         replacementCode.className = `language-${language}`;
       }
       replacementCode.textContent = this.getTextWithLineBreaks(code).replace(/\n+$/g, '');
       replacementPre.appendChild(replacementCode);
-      pre.replaceWith(replacementPre);
+      container.replaceWith(replacementPre);
     });
   }
 
-  private getCodeBlockLanguage(pre: Element): string {
-    const stickyHeader = pre.querySelector('.sticky');
-    if (!stickyHeader) return '';
+  private getCodeBlockLanguage(container: Element, code: Element): string {
+    const language = code.getAttribute('data-language')?.trim().toLowerCase();
+    if (language) return language === 'text' ? '' : language;
 
-    const titleElement = Array.from(stickyHeader.querySelectorAll('div')).find(el => {
+    const titleElement = Array.from(container.querySelectorAll('.sticky div')).find(el => {
       const text = (el.textContent || '').trim();
       return text.length > 0 && el.classList.contains('text-token-text-primary');
     });
 
-    const language = (titleElement?.textContent || '').trim().toLowerCase();
-    return language === 'text' ? '' : language;
+    const legacyLanguage = (titleElement?.textContent || '').trim().toLowerCase();
+    if (legacyLanguage) return legacyLanguage === 'text' ? '' : legacyLanguage;
+
+    // The newer ChatGPT toolbar exposes the language in a truncate label,
+    // while the editor itself normally carries the more reliable data-language.
+    const toolbarLabel = container.querySelector(
+      '[data-markdown-copy="exclude"] .flex-1.truncate',
+    );
+    const toolbarLanguage = (toolbarLabel?.textContent || '').trim().toLowerCase();
+    return toolbarLanguage === 'text' ? '' : toolbarLanguage;
   }
 
   private shieldLatex(fragment: DocumentFragment): void {
@@ -114,7 +125,7 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
 
     if (lineElements.length > 0) {
       return lineElements
-        .map(line => this.getTextFromNode(line, false))
+        .map(line => this.getTextFromNode(line, false).replace(/\r?\n[\t ]*/g, ''))
         .join('\n');
     }
 
