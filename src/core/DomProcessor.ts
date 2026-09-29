@@ -89,7 +89,17 @@ export class DomProcessor {
         if (!insidePre) {
           const prev = node.previousSibling;
           const next = node.nextSibling;
-          if (prev && next) nodesToRemove.push(node);
+          // Remove formatting whitespace around block elements, but preserve
+          // meaningful spaces between inline content such as custom inline-code spans.
+          if (
+            prev &&
+            next &&
+            (this.isBlockLike(prev) ||
+              this.isBlockLike(next) ||
+              this.isPunctuationBoundary(prev, next))
+          ) {
+            nodesToRemove.push(node);
+          }
         }
       }
       node = walker.nextNode();
@@ -98,5 +108,23 @@ export class DomProcessor {
       if (this.isElement(n)) n.remove();
       else n.parentNode?.removeChild(n);
     });
+  }
+
+  private static isBlockLike(node: Node | null): boolean {
+    return (
+      this.isElement(node) &&
+      node.matches(
+        'address, article, aside, blockquote, div, dl, fieldset, figcaption, figure, footer, form, ' +
+          'h1, h2, h3, h4, h5, h6, header, hr, li, main, nav, ol, p, pre, section, table, ' +
+          'tbody, td, tfoot, th, thead, tr, ul',
+      )
+    );
+  }
+
+  private static isPunctuationBoundary(previous: Node, next: Node): boolean {
+    const previousText = previous.textContent?.trimEnd() || '';
+    const nextText = next.textContent?.trimStart() || '';
+
+    return /^[,.;:!?%)}\]]/.test(nextText) || /[([{]$/.test(previousText);
   }
 }

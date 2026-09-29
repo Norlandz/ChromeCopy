@@ -20,12 +20,25 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
   }
 
   public preprocess(fragment: DocumentFragment): void {
+    this.normalizeInlineCode(fragment);
     this.normalizeCodeBlocks(fragment);
     this.shieldLatex(fragment);
   }
 
   public getRules(): TurndownService.Rule[] {
     return [MathProcessor.getShieldRule()];
+  }
+
+  private normalizeInlineCode(fragment: DocumentFragment): void {
+    const doc = fragment.ownerDocument;
+
+    fragment.querySelectorAll('[data-markdown-copy="inline-code"]').forEach(source => {
+      if (!fragment.contains(source)) return;
+
+      const code = doc.createElement('code');
+      while (source.firstChild) code.appendChild(source.firstChild);
+      source.replaceWith(code);
+    });
   }
 
   private normalizeCodeBlocks(fragment: DocumentFragment): void {
@@ -48,7 +61,8 @@ export class OpenAIGPTAdapter implements IPlatformAdapter {
       const code = container.matches('pre.cm-content')
         ? container
         : container.querySelector('.cm-content') ||
-          container.querySelector('div.text-size-chat > code[class~="whitespace-pre!"]');
+          container.querySelector('div.text-size-chat > code[class~="whitespace-pre!"]') ||
+          container.querySelector('.chatgpt-code-scrollport > pre > code');
       if (!code) return;
 
       const replacementPre = doc.createElement('pre');
